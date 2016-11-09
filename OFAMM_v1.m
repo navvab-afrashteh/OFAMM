@@ -107,7 +107,7 @@ elseif strcmp(handles.ExtName, '.mat')
         end
     end
     if ~isempty(idx_3d)
-        eval(['handles.ImgSeq = m.',fn{idx_3d(1)},';']);
+        eval(['handles.ImgSeq = mFile.',fn{idx_3d(1)},';']);
         handles.ImgSeqLoaded = 1;
     end
     delete(mFile);
