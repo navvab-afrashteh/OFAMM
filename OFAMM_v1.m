@@ -1160,8 +1160,25 @@ elseif strcmp(handles.MaskExtName, '.raw')
     y = input('Please insert number of pixels in "y" dir: ');
     handles.Mask = imreadallraw(FullMaskFileName,x,y,1,'*float32');
 elseif strcmp(handles.MaskExtName, '.mat')
-    handles.Mask = load(FullMaskFileName);
-    eval(['handles.Mask = handles.Mask.',handles.MaskFileName,';']);
+    mFile = matfile(FullMaskFileName);
+    fn = fieldnames(mFile);
+    Nfn = 1;
+    keepgoing = 1;
+    while keepgoing
+        a = eval(['mFile.',fn{Nfn}]);
+        if isnumeric(a)
+            if size(a,3) == 1
+                eval(['handles.Mask = mFile.',fn{Nfn},';']);
+                handles.ImgSeqLoaded = 1;
+                keepgoing = 0;
+            end
+        end
+        Nfn = Nfn+1;
+        if Nfn > length(fn)
+            keepgoing = 0;
+        end
+    end
+    delete(mFile);
 else
     handles.Mask = ones(handles.dim1,handles.dim2);
     disp('Invalid data format. Data format could be ".tif", ".raw", or ".mat".\n')
