@@ -22,7 +22,7 @@ function varargout = OFAMM_v1(varargin)
 
 % Edit the above text to modify the response to help OFAMM_v1
 
-% Last Modified by GUIDE v2.5 12-Sep-2016 14:45:00
+% Last Modified by GUIDE v2.5 09-Feb-2017 18:42:29
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -150,10 +150,10 @@ if handles.ImgSeqLoaded == 1
         end
     end
 end
-% load SourceSinkResults
+% load SourceSinkSpiralResults
 if handles.ImgSeqLoaded == 1
-    if exist([handles.PathName,'\SourceSinkResults.mat'],'file')
-        load([handles.PathName,'\SourceSinkResults.mat']);
+    if exist([handles.PathName,'\SourceSinkSpiralResults.mat'],'file')
+        load([handles.PathName,'\SourceSinkSpiralResults.mat']);
         if exist('SoSi','var')
             if isfield(SoSi,'CLG')
                 handles.SourceCLG = SoSi.CLG.source;
@@ -259,7 +259,8 @@ if get(handles.VectorFieldVisChk,'value')
         end
     end
 end
-% display source/sink
+
+% display source/sink (Simple or Node source/sink)
 markersize = 3;
 linewidth = 1.2;
 source_color = 'g';
@@ -281,12 +282,52 @@ if get(handles.SSChk,'value')
             [~, sourceidx] = find(source(3,:) == frameNumber);
             for idx = sourceidx
                 axes(handles.MainAxes);
-                plot(source(1,idx),source(2,idx),'s','color',source_color,'markersize',markersize,'markerfacecolor',source_color)
+                plot(source(1,idx),source(2,idx),'o','color',source_color,'markersize',markersize,'markerfacecolor',source_color)
                 hold on;
                 plot(contour_source{idx}.xy(1,:),contour_source{idx}.xy(2,:),'-','color',contour_source_color,'linewidth',linewidth)
                 hold on
             end
             %find sinks and display
+            [~, sinkidx] = find(sink(3,:) == frameNumber);
+            for idx = sinkidx
+                axes(handles.MainAxes);
+                plot(sink(1,idx),sink(2,idx),'o','color',sink_color,'markersize',markersize,'markerfacecolor',sink_color)
+                hold on;
+                plot(contour_sink{idx}.xy(1,:),contour_sink{idx}.xy(2,:),'-','color',contour_sink_color,'linewidth',linewidth)
+                hold on
+            end
+        end
+    end
+end
+
+% display Spiral source/sink
+markersize = 3;
+linewidth = 1.2;
+source_color = 'b';
+sink_color = 'k';
+contour_source_color = 'b';
+contour_sink_color = 'k';
+
+if get(handles.SpiralChk,'value')
+    if get(handles.CLGVisSpiral,'value'); methodSS = 'CLG'; end
+    if get(handles.HSVisSpiral,'value'); methodSS = 'HS'; end
+    
+    if eval(['isfield(handles,','''SS',methodSS,'calculated'')'])
+        if eval(['handles.SS',methodSS,'calculated'])
+            eval(['source = handles.SourceSpiral',methodSS,';']);
+            eval(['sink = handles.SinkSpiral',methodSS,';']);
+            eval(['contour_source = handles.ContourSourceSpiral',methodSS,';']);
+            eval(['contour_sink = handles.ContourSinkSpiral',methodSS,';']);
+            %find Spiral sources and display
+            [~, sourceidx] = find(source(3,:) == frameNumber);
+            for idx = sourceidx
+                axes(handles.MainAxes);
+                plot(source(1,idx),source(2,idx),'o','color',source_color,'markersize',markersize,'markerfacecolor',source_color)
+                hold on;
+                plot(contour_source{idx}.xy(1,:),contour_source{idx}.xy(2,:),'-','color',contour_source_color,'linewidth',linewidth)
+                hold on
+            end
+            %find Spiral sinks and display
             [~, sinkidx] = find(sink(3,:) == frameNumber);
             for idx = sinkidx
                 axes(handles.MainAxes);
@@ -2420,3 +2461,194 @@ function runTS_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of runTS
+
+
+% --- Executes on button press in SpiralChk.
+function SpiralChk_Callback(hObject, eventdata, handles)
+% hObject    handle to SpiralChk (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of SpiralChk
+currentFrame = round(get(handles.FramesSlider,'Value'));
+handles = loadFrame(handles,eventdata,currentFrame);
+guidata(gcbo,handles);
+
+% --- Executes on button press in CLGVisSpiral.
+function CLGVisSpiral_Callback(hObject, eventdata, handles)
+% hObject    handle to CLGVisSpiral (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of CLGVisSpiral
+if get(hObject,'value')
+    set(handles.HSVisSpiral,'value',0);
+else
+    set(handles.HSVisSpiral,'value',1);
+end
+currentFrame = round(get(handles.FramesSlider,'Value'));
+handles = loadFrame(handles,eventdata,currentFrame);
+guidata(gcbo,handles);
+
+% --- Executes on button press in HSVisSpiral.
+function HSVisSpiral_Callback(hObject, eventdata, handles)
+% hObject    handle to HSVisSpiral (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of HSVisSpiral
+if get(hObject,'value')
+    set(handles.CLGVisSpiral,'value',0);
+else
+    set(handles.CLGVisSpiral,'value',1);
+end
+currentFrame = round(get(handles.FramesSlider,'Value'));
+handles = loadFrame(handles,eventdata,currentFrame);
+guidata(gcbo,handles);
+
+
+% --- Executes on button press in ZoomChk.
+function ZoomChk_Callback(hObject, eventdata, handles)
+% hObject    handle to ZoomChk (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ZoomChk
+axes(handles.MainAxes);
+if get(hObject,'Value')
+    zoom on
+else
+    zoom off
+end
+
+
+% --- Executes on button press in CursorChk.
+function CursorChk_Callback(hObject, eventdata, handles)
+% hObject    handle to CursorChk (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of CursorChk
+axes(handles.MainAxes);
+if get(hObject,'Value')
+    datacursormode on
+else
+    datacursormode off
+end
+
+
+% --- Executes on button press in Help.
+function Help_Callback(hObject, eventdata, handles)
+% hObject    handle to Help (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+OFAMMfilePath = mfilename('fullpath');
+slashPos = find(OFAMMfilePath == '\');
+PathName = OFAMMfilePath(1:slashPos(end));
+ReadmePathName = [PathName 'Readme.txt'];
+eval(['!notepad ' ReadmePathName])
+
+
+% --- Executes on button press in AboutOFAMM.
+function AboutOFAMM_Callback(hObject, eventdata, handles)
+% hObject    handle to AboutOFAMM (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles,'AboutFig')
+    posMonitor = get(0,'MonitorPositions');
+    w = posMonitor(3)/6;
+    posAboutFig(3) = w;
+    posAboutFig(4) = w;%*posMonitor(3)/posMonitor(4);
+    posAboutFig(1) = posMonitor(3)/2-posAboutFig(3)/2;
+    posAboutFig(2) = posMonitor(4)/2-0*posAboutFig(4)/2;
+    figure('MenuBar','none','ToolBar','none','units',get(0,'units'),'position',posAboutFig);
+    
+    handles.AboutFig = gcf;
+    set(handles.AboutFig,'visible','on','numbertitle','off','Resize','off','name','About OFAMM');
+end
+AboutOFAMMWin
+
+function AboutOFAMMWin
+a = 0.2;
+x = -3:a:3;
+y = -3:a:3;
+ax=axes;
+set(ax,'position',[0 0 1 1])
+axis off
+[xx,yy] = meshgrid(x,y);
+zz = peaks(xx,yy);
+hold on
+pcolor(x,y,zz);
+axis([-3 3 -3 3]);
+colormap((jet+white)/2);
+shading interp
+[px,py] = gradient(zz,.2,.2);
+c = [1 1 1]*0.7;
+quiver(x,y,px,py,2,'color',c);
+
+maxX = max(x); minX = min(x); dx = maxX - minX;
+maxY = max(y); minY = min(y); dy = maxY - minY;
+
+txtStr = 'OFAMM  v.1.0';
+xt = minX + dx*0.5;
+yt = minY + dy*0.9;
+text(xt,yt,txtStr,'fontsize',14,'FontWeight','bold','fontname','times','HorizontalAlignment','center');
+
+txtStr = 'A toolbox to investigate the spatiotemporal';
+xt = minX + dx*0.5;
+yt = minY + dy*0.8;
+text(xt,yt,txtStr,'fontsize',8,'FontWeight','bold','fontname','arial','HorizontalAlignment','center');
+
+txtStr = 'dynamics of mesoscale brain activity.';
+xt = minX + dx*0.5;
+yt = minY + dy*0.75;
+text(xt,yt,txtStr,'fontsize',8,'FontWeight','bold','fontname','arial','HorizontalAlignment','center');
+
+txtStr = 'by:';
+xt = minX + dx*0.1;
+yt = minY + dy*0.65;
+text(xt,yt,txtStr,'fontsize',9,'FontWeight','bold','fontname','times','HorizontalAlignment','left');
+
+a = 0.6; b = 0.08;
+txtStr = 'Navvab Afrashteh';
+xt = minX + dx*0.5;
+yt = minY + dy*(a-0*b);
+text(xt,yt,txtStr,'fontsize',9,'FontWeight','bold','fontname','times','HorizontalAlignment','center');
+
+txtStr = 'Samsoon Inayat';
+xt = minX + dx*0.5;
+yt = minY + dy*(a-1*b);
+text(xt,yt,txtStr,'fontsize',9,'FontWeight','bold','fontname','times','HorizontalAlignment','center');
+
+txtStr = 'Mostafa Mohsenvand';
+xt = minX + dx*0.5;
+yt = minY + dy*(a-2*b);
+text(xt,yt,txtStr,'fontsize',9,'FontWeight','bold','fontname','times','HorizontalAlignment','center');
+
+txtStr = 'Majid H. Mohajerani';
+xt = minX + dx*0.5;
+yt = minY + dy*(a-3*b);
+text(xt,yt,txtStr,'fontsize',9,'FontWeight','bold','fontname','times','HorizontalAlignment','center');
+
+txtStr = 'Canadian Centre for Behavioural Neuroscience';
+xt = minX + dx*0.5;
+yt = minY + dy*(a-4.25*b);
+text(xt,yt,txtStr,'fontsize',9,'FontWeight','bold','fontname','times','HorizontalAlignment','center');
+
+txtStr = 'University of Lethbridge';
+xt = minX + dx*0.5;
+yt = minY + dy*(a-5*b);
+text(xt,yt,txtStr,'fontsize',9,'FontWeight','bold','fontname','times','HorizontalAlignment','center');
+
+txtStr = 'For more information visit:';
+xt = minX + dx*0.5;
+yt = minY + dy*(a-6*b);
+text(xt,yt,txtStr,'fontsize',10,'FontWeight','normal','fontname','times','HorizontalAlignment','center');
+
+cbStr = 'web(''http://lethbridgebraindynamics.com/OFAMM/'');';
+txtStr = 'Lethbridge Brain Dynamics';
+xt = minX + dx*0.5;
+yt = minY + dy*(a-6.7*b);
+htxt = text(xt,yt,txtStr,'fontsize',10,'FontWeight','normal','fontname','times','HorizontalAlignment','center','color','b');
+set(htxt,'ButtonDownFcn',cbStr)
+hold off

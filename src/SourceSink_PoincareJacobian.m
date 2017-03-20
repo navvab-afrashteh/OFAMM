@@ -40,16 +40,24 @@ for idx = 1:size(uv,3)
         delta = det(J);
         tau = trace(J);
         
-        [type, ~] = SourceSinkSaddle(delta, tau);
+        [type, sp] = SourceSinkSaddle(delta, tau);
         
         if type == 2
             CentrePoincareJacobian(r,c,idx) = 1;
             
         elseif type == 1
-            SourcePoincareJacobian(r,c,idx) = 1;
+            if sp == 1
+                SourcePoincareJacobian(r,c,idx) = 1; % for spiral sources
+            else
+                SourcePoincareJacobian(r,c,idx) = 2; % for node sources
+            end
             
         elseif type == -1
-            SinkPoincareJacobian(r,c,idx) = 1;
+            if sp == 1
+                SinkPoincareJacobian(r,c,idx) = 1;  % for spiral sinks
+            else
+                SinkPoincareJacobian(r,c,idx) = 2;  % for node sinks
+            end
             
         elseif type == 0
             SaddlePoincareJacobian(r,c,idx) = 1;

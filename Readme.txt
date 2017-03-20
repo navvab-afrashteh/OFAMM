@@ -39,7 +39,7 @@ can be saved by pressing the “Save” button in the “Speed Histogram and Angle Ros
 The variable stored in this file is of “Structure” type and each element of the structure includes the self-explanatory named variables containing pixel location, trajectory (streamline), 
 and speed. After the estimation of velocity vector fields, “Run Source/Sink Analysis” button, will identify sources and sinks and store results in “SourceSinkResults.mat” file saved in the 
 same directory as the image sequence. In this file, the variable names are also self-explanatory and includes the locations of sources and sinks in space time, their sizes and strengths, 
-and the contour information that can be visualized to see shape of a source or sink. “Sources/Sinks” checkbox will allow the visualization of these results in the main axes. 
+and the contour information that can be visualized to see shape of a source or sink. “Sources/Sinks” or “Spiral” checkbox will allow the visualization of these results in the main axes. 
 
 Reference:
 “Optical-flow analysis toolbox for characterization of spatiotemporal dynamics in mesoscale brain activity”, Navvab Afrashteh, Samsoon Inayat, Mostafa Mohsenvand, Majid H. Mohajerani.

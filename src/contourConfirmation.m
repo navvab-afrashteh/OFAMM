@@ -1,9 +1,9 @@
-function [CorrContour] = contourConfirmation(C, sourceVerified, rs, cs)
+function [CorrContour] = contourConfirmation(C, sVerified, rs, cs, Nnested)
 
-CorrContour = sourceVerified;
-for n = size(sourceVerified,2):-1:1
-    k = sourceVerified(1,n);
-    N = sourceVerified(2,n);
+CorrContour = sVerified;
+for n = size(sVerified,2):-1:1
+    k = sVerified(1,n);
+    N = sVerified(2,n);
     c = C(:,k+1:k+N);
     x = c(1,:);
     y = c(2,:);
@@ -14,8 +14,8 @@ for n = size(sourceVerified,2):-1:1
 end
 
 % Refining Sources
-if size(CorrContour,2) > 1
-	sourceVerified = CorrContour(:,1);
+if size(CorrContour,2) >= Nnested
+	sVerified = CorrContour(:,1);
 	
 	for t = 2:size(CorrContour,2)
 		k1 = CorrContour(1,t);
@@ -23,10 +23,10 @@ if size(CorrContour,2) > 1
 		c1 = C(:, k1+1:k1+n1);
 		
 		q=0;
-		len = size(sourceVerified,2);
+		len = size(sVerified,2);
 		for p = 1:len
-			k2 = sourceVerified(1,p);
-			n2 = sourceVerified(2,p);
+			k2 = sVerified(1,p);
+			n2 = sVerified(2,p);
 			c2 = C(:, k2+1:k2+n2);
 			
 			[inside, Cin] = isInsideContour(c1 , c2);
@@ -35,8 +35,8 @@ if size(CorrContour,2) > 1
 					d = Cin - c1;
 					d = d(:);
 					if ~sum(d)
-						sourceVerified(:,p) = [];
-						sourceVerified = [sourceVerified, CorrContour(:,t)];
+						sVerified(:,p) = [];
+						sVerified = [sVerified, CorrContour(:,t)];
 					end
 				end
 				break
@@ -47,10 +47,10 @@ if size(CorrContour,2) > 1
 		end
 		
 		if q == len
-			sourceVerified = [sourceVerified, CorrContour(:,t)];
+			sVerified = [sVerified, CorrContour(:,t)];
 		end
 	end
 else
-	sourceVerified = [];
+	sVerified = [];
 end
-CorrContour = sourceVerified;
+CorrContour = sVerified;

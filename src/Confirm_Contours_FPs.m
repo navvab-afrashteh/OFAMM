@@ -1,7 +1,8 @@
 function [SourcePoincareJacobian, SinkPoincareJacobian,...
     SourceVerifiedContours_Stack, SinkVerifiedContours_Stack] = ...
     Confirm_Contours_FPs(SourcePoincareJacobian, SinkPoincareJacobian, ...
-    Contours_Stack, SourceVerifiedContours_Stack, SinkVerifiedContours_Stack)
+    Contours_Stack, SourceVerifiedContours_Stack, SinkVerifiedContours_Stack,...
+    Nnested_source, Nnested_sink)
 
 [~, ~, d3] = size(SourcePoincareJacobian);
 for idx = 1:d3
@@ -17,7 +18,7 @@ for idx = 1:d3
     for s = length(rS):-1:1
         rs = rS(s);
         cs = cS(s);
-        [CorrContour] = contourConfirmation(C, sourceVerified, rs, cs);
+        [CorrContour] = contourConfirmation(C, sourceVerified, rs, cs, Nnested_source);
         
         if isempty(CorrContour)
             SourcePoincareJacobian(rs,cs,idx) = 0;
@@ -35,7 +36,7 @@ for idx = 1:d3
     for s = length(rS):-1:1
         rs = rS(s);
         cs = cS(s);
-        [CorrContour] = contourConfirmation(C, sinkVerified, rs, cs);
+        [CorrContour] = contourConfirmation(C, sinkVerified, rs, cs, Nnested_sink);
         if isempty(CorrContour)
             SinkPoincareJacobian(rs,cs,idx) = 0;
             continue;
