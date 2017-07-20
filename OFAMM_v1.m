@@ -22,7 +22,7 @@ function varargout = OFAMM_v1(varargin)
 
 % Edit the above text to modify the response to help OFAMM_v1
 
-% Last Modified by GUIDE v2.5 09-Feb-2017 18:42:29
+% Last Modified by GUIDE v2.5 20-Jul-2017 01:09:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -87,8 +87,8 @@ function handles = loadData(handles,eventdata)
 FullFileName = fullfile(handles.PathName, [handles.FileName, handles.ExtName]);
 
 if strcmp(handles.ExtName, '.tif') || strcmp(handles.ExtName, '.tiff')
-%     nFrames = input('Please insert number of frames for .tif file: ');
-    handles.ImgSeq = imreadalltiff(FullFileName);
+    nFrames = input('Please insert number of frames for .tif file: ');
+    handles.ImgSeq = imreadalltiff(FullFileName,nFrames);
     handles.ImgSeqLoaded = 1;
 elseif strcmp(handles.ExtName, '.raw')
     nFrames = input('Please insert number of frames for .raw file: ');
@@ -422,7 +422,7 @@ if get(handles.Trajectory,'value') && ~metaData.playFlag
                         % display
                         axes(handles.MainAxes);
                         str = streamline(output.str);
-                        set(str,'Color','r');
+                        set(str,'Color','w');
                         hold on
                         handles.TrajectoryInfo.preVal = 1;
                         handles.TrajectoryInfo.Fstart = FstartROI;
@@ -433,6 +433,17 @@ if get(handles.Trajectory,'value') && ~metaData.playFlag
     end
 end
 
+if get(handles.ShowROI,'Value')
+    if isfield(handles,'ROI')
+        if isfield(handles.ROI,'selected')
+            if handles.ROI.selected
+                [yROI, xROI] = find(handles.ROI.BW);
+                axes(handles.MainAxes);
+                plot(xROI, yROI,'m.')
+            end
+        end
+    end
+end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = OFAMM_v1_OutputFcn(hObject, eventdata, handles) 
@@ -1109,12 +1120,23 @@ if plotflag && (isfield(handles,'InstSpDirCLG') || isfield(handles,'InstSpDirHS'
     c2 = [0.55,0,0];
     figure(handles.InstSpDirFig);
     subplot(121); cla;
-    bar(bins,binsAll');
+    h_bar = bar(bins,binsAll');
+    if length(h_bar)>1
+        set(h_bar(1),'facecolor',c1)
+        set(h_bar(2),'facecolor',c2)
+    elseif length(h_bar)==1
+        if isfield(handles,'InstSpDirCLG')
+            set(h_bar,'facecolor',c1)
+        else
+            set(h_bar,'facecolor',c2)
+        end
+    end
+    
     maxY = max(binsAll(:));
     xlim([min(bins)-binSize, max(bins)+binSize]);
     ylim([0 maxY*1.1]);
     set(gca,'box','off','TickDir','out');
-    xlabel(sprintf('S_i (p/f)')); ylabel('Percentage');
+    xlabel(sprintf('Inst. Speed (p/f)')); ylabel('Percentage');
     
     figure(handles.InstSpDirFig);
     subplot(122); cla;
@@ -1125,17 +1147,20 @@ if plotflag && (isfield(handles,'InstSpDirCLG') || isfield(handles,'InstSpDirHS'
         if isfield(handles,'InstSpDirHS')
             h = polar(tHS,rHS); 
             set(h,'color',c2);
-            legend('CLG','HS','Location','best')
             hold off;
+            subplot(121);
+            legend('CLG','HS','Location','best')
         else
+            subplot(121);
             legend('CLG','Location','best')
         end
     else
         if isfield(handles,'InstSpDirHS')
             h = polar(tHS,rHS); 
-            set(h,'color',c1);
-            legend('HS','Location','best')
+            set(h,'color',c2);
             hold off;
+            subplot(121);
+            legend('HS','Location','best')
         end
     end
 end
@@ -1575,41 +1600,74 @@ if plotflag && (isfield(handles,'TempSpTrajLenCLG') || isfield(handles,'TempSpTr
         end
     else
         if isfield(handles,'TempSpTrajLenHS')
-            plot(tSpHS,AllSpHS,'color',c1); 
+            plot(tSpHS,AllSpHS,'color',c2); 
             legend('HS','Location','best')
             hold off;
         end
     end
-    ylabel('S_t_e (p/f)');
+    ylabel('Temp. Speed (p/f)');
     xlabel('Frame Number');
     
     % teporal speed histogram
     figure(handles.TempSptrajLenFig);
     subplot(142); cla;
     
-    bar(binsSp,binsAllSp');
+    h_bar = bar(binsSp,binsAllSp');
+    if length(h_bar)>1
+        set(h_bar(1),'facecolor',c1)
+        set(h_bar(2),'facecolor',c2)
+    elseif length(h_bar)==1
+        if isfield(handles,'TempSpTrajLenCLG')
+            set(h_bar,'facecolor',c1)
+        else
+            set(h_bar,'facecolor',c2)
+        end
+    end
+    
     maxY = max(binsAllSp(:));
     xlim([min(binsSp)-binSizeSp, max(binsSp)+binSizeSp]);
     ylim([0 maxY*1.1]);
     set(gca,'box','off','TickDir','out');
-    xlabel(sprintf('S_t_e (p/f)')); ylabel('Percentage');
+    xlabel(sprintf('Temp. Speed (p/f)')); ylabel('Percentage');
     
     % Maximum teporal speed histogram
     figure(handles.TempSptrajLenFig);
     subplot(143); cla;
     
-    bar(binsMaxSp,binsAllMaxSp');
+    h_bar = bar(binsMaxSp,binsAllMaxSp');
+    if length(h_bar)>1
+        set(h_bar(1),'facecolor',c1)
+        set(h_bar(2),'facecolor',c2)
+    elseif length(h_bar)==1
+        if isfield(handles,'TempSpTrajLenCLG')
+            set(h_bar,'facecolor',c1)
+        else
+            set(h_bar,'facecolor',c2)
+        end
+    end
+    
     maxY = max(binsAllMaxSp(:));
     xlim([min(binsMaxSp)-binSizeMaxSp, max(binsMaxSp)+binSizeMaxSp]);
     ylim([0 maxY*1.1]);
     set(gca,'box','off','TickDir','out');
-    xlabel(sprintf('Max S_t_e (p/f)')); ylabel('Percentage');
+    xlabel(sprintf('Max Temp. Speed (p/f)')); ylabel('Percentage');
     
     % Trajectory Distance histogram
     figure(handles.TempSptrajLenFig);
     subplot(144); cla;
     
-    bar(binsLen,binsAllLen');
+    h_bar = bar(binsLen,binsAllLen');
+    if length(h_bar)>1
+        set(h_bar(1),'facecolor',c1)
+        set(h_bar(2),'facecolor',c2)
+    elseif length(h_bar)==1
+        if isfield(handles,'TempSpTrajLenCLG')
+            set(h_bar,'facecolor',c1)
+        else
+            set(h_bar,'facecolor',c2)
+        end
+    end
+    
     maxY = max(binsAllLen(:));
     xlim([min(binsLen)-binSizeLen, max(binsLen)+binSizeLen]);
     ylim([0 maxY*1.1]);
@@ -2226,8 +2284,8 @@ function Trajectory_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of Trajectory
 if get(hObject,'value')
     handles.TrajectoryInfo.currVal = 1;
-    if get(handles.CLGVisOF,'value'); methodTraj = 'CLG'; end
-    if get(handles.HSVisOF,'value'); methodTraj = 'HS'; end
+    if get(handles.CLGVisTraj,'value'); methodTraj = 'CLG'; end
+    if get(handles.HSVisTraj,'value'); methodTraj = 'HS'; end
     
     handles.TrajectoryInfo.currentFrame = round(get(handles.FramesSlider,'Value'));
     
@@ -2564,7 +2622,7 @@ if ~isfield(handles,'AboutFig')
     figure('MenuBar','none','ToolBar','none','units',get(0,'units'),'position',posAboutFig);
     
     handles.AboutFig = gcf;
-    set(handles.AboutFig,'visible','on','numbertitle','off','Resize','off','name','About OFAMM');
+    set(handles.AboutFig,'visible','on','numbertitle','off','Resize','on','name','About OFAMM');
 end
 AboutOFAMMWin
 
@@ -2605,9 +2663,9 @@ yt = minY + dy*0.75;
 text(xt,yt,txtStr,'fontsize',8,'FontWeight','bold','fontname','arial','HorizontalAlignment','center');
 
 txtStr = 'by:';
-xt = minX + dx*0.1;
+xt = minX + dx*0.5;
 yt = minY + dy*0.65;
-text(xt,yt,txtStr,'fontsize',9,'FontWeight','bold','fontname','times','HorizontalAlignment','left');
+text(xt,yt,txtStr,'fontsize',9,'FontWeight','bold','fontname','times','HorizontalAlignment','center');
 
 a = 0.6; b = 0.08;
 txtStr = 'Navvab Afrashteh';
@@ -2652,3 +2710,16 @@ yt = minY + dy*(a-6.7*b);
 htxt = text(xt,yt,txtStr,'fontsize',10,'FontWeight','normal','fontname','times','HorizontalAlignment','center','color','b');
 set(htxt,'ButtonDownFcn',cbStr)
 hold off
+
+
+% --- Executes on button press in ShowROI.
+function ShowROI_Callback(hObject, eventdata, handles)
+% hObject    handle to ShowROI (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ShowROI
+currentFrame = round(get(handles.FramesSlider,'Value'));
+handles = loadFrame(handles,eventdata,currentFrame);
+guidata(gcbo,handles);
+

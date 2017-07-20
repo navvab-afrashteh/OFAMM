@@ -79,6 +79,7 @@ if handles.ImgSeqLoaded
             if runHS
                 tic
                 [u, v] = HS(im1,im2,HSparams.alpha,HSparams.iterations);
+                t = toc;
                 handles.tHS = handles.tHS+t;
                 handles.uvHS(:,:,idx) = (u +1i*v);
             end
@@ -128,6 +129,7 @@ if handles.ImgSeqLoaded
             mFileuvResults.FstartOFcalculated =  handles.FstartOFcalculated;
             mFileuvResults.FendOFcalculated = handles.FendOFcalculated;
             mFileuvResults.tCLG = handles.tCLG;
+            mFileuvResults.CLGparams = CLGparams;
             delete(mFileuvResults);
             % save CLG parameters
             fileID = fopen([handles.SavePathName, '\CLG Parameters.txt'],'w');
@@ -151,6 +153,7 @@ if handles.ImgSeqLoaded
             mFileuvResults.FstartOFcalculated =  handles.FstartOFcalculated;
             mFileuvResults.FendOFcalculated = handles.FendOFcalculated;
             mFileuvResults.tHS = handles.tHS;
+            mFileuvResults.HSparams = HSparams;
             delete(mFileuvResults);
             % save HS parameters
             fileID = fopen([handles.SavePathName, '\HS Parameters.txt'],'w');
@@ -168,6 +171,7 @@ if handles.ImgSeqLoaded
             mFileuvResults = matfile(SaveFullFileName,'Writable',true);
             mFileuvResults.uvTS = handles.uvTS;
             mFileuvResults.tTS = handles.tTS;
+            mFileuvResults.TSparams = TSparams;
             delete(mFileuvResults);
             % save TS parameters
             fileID = fopen([handles.SavePathName, '\TS Parameters.txt'],'w');

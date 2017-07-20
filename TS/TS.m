@@ -36,8 +36,10 @@ p = 1;
 
 hWaitBar = waitbar(0,sprintf(' '));
 nFramesTodoOF = length(frames);
+frameN = 0;
 for frame = frames
-    waitbar(frame/nFramesTodoOF,hWaitBar,sprintf('Processing frame %d of %d with TS',frame,nFramesTodoOF));
+    frameN = frameN+1;
+    waitbar(frameN/nFramesTodoOF,hWaitBar,sprintf('Processing frame %d with TS',frame));
     for i = k+1:dim1-k-1
         for j = k+1:dim2-k-1
             
@@ -72,7 +74,6 @@ for frame = frames
         end
     end
     p = p+1;
-    close(hWaitBar);
 end
 uv = uv/abs((T1'*dir)^2/(T1'*T1)); % flow in the form of (1/speed)*exp(1i*phi)
 uv = uv./(abs(uv).^2); % change the flow to be in the form of (speed)*exp(1i*phi)
@@ -118,6 +119,6 @@ for frame = frames
     end
     p = p+1;
 end
-
+close(hWaitBar);
 
 

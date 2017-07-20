@@ -7,9 +7,8 @@ function ImgSeq = imreadallraw(filename,x,y,nFrames,precision)
     fid0 = fopen(filename, 'r', 'b');
     ImgSeq = fread(fid0,[x*y nFrames],precision);
     fclose(fid0);
-  
+ 
+    nFrames = size(ImgSeq,2);
     ImgSeq = reshape(ImgSeq,x,y,nFrames);
-    for ii=1:nFrames
-        ImgSeq(:,:,ii) = flipud(rot90(ImgSeq(:,:,ii)));
-    end
+    ImgSeq = permute(ImgSeq, [2, 1, 3]);
 end
