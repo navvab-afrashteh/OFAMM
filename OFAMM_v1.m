@@ -1919,13 +1919,8 @@ if get(hObject,'value')
                 if startFrame < endFrame
                     output = Velocity_Profile(eval(['handles.uv',methodTraj]),startFrame,endFrame,offsetFrame,sx,sy);
                     % display
-                    XLim = get(handles.MainAxes,'xlim');
-                    YLim = get(handles.MainAxes,'ylim');
                     str = streamline(output.str);
                     set(str,'Color','w'); hold on;
-                    ylim(YLim)
-                    xlim(XLim)
-                    axis equal
                     handles.TrajectoryInfo.preVal = 1;
                     handles.TrajectoryInfo.Fstart = FstartROI;
                 end
