@@ -1,5 +1,6 @@
 function output = Velocity_Profile (uv,startFrame,endFrame,offsetFrame,sx,sy,varargin)
 
+% uv = uv(:,:,startFrame+offsetFrame-1:endFrame+offsetFrame-2);
 [d1, d2, d3] = size(uv);
 uv = cat(3, zeros(d1,d2),uv);
 

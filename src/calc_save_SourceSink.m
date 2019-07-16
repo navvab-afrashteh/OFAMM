@@ -6,7 +6,7 @@ Mask = handles.Mask;
 FstartOF = handles.FstartOFcalculated;
 FendOF = handles.FendOFcalculated;
 eval(['uv = handles.uv',method,';']);
-
+uv = uv(:,:,FstartOF:FendOF-1);
 % source and sink detection
 % Detection using Poincare and Jacobian Matrix
 [SourcePoincareJacobian, SinkPoincareJacobian] = SourceSink_PoincareJacobian(uv, Mask, method);

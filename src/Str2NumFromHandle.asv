@@ -24,9 +24,9 @@ if strcmp(get(h,'Tag'),'MinDispVal')
         Num = sign(DefaultNum)*abs(DefaultNum)/2;
     end
 end
-if strcmp(get(h,'Tag'),'MaxDispVal') 
-    if Num < DefaultNum
-        Num = sign(DefaultNum)*abs(DefaultNum)*2;
+if strcmp(get(h,'Tag'),'MinDispVal') 
+    if Num > DefaultNum
+        Num = sign(DefaultNum)*abs(DefaultNum)/2;
     end
 end
 if strcmp(get(h,'Tag'),'FendROI')

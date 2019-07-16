@@ -302,7 +302,7 @@ if get(handles.SSChk,'value')
     end
 end
 
-% display Spiral source/sink
+% display Spiral /sink
 markersize = 3;
 linewidth = 1.2;
 source_color = 'b';
@@ -1951,6 +1951,8 @@ else
     handles = loadFrame(handles,eventdata,currentFrame);
 end
 
+% currentFrame = round(get(handles.FramesSlider,'Value'));
+% handles = loadFrame(handles,eventdata,currentFrame);
 if ~get(hObject,'value')
     handles.TrajectoryInfo.preVal = 0;
     handles.TrajectoryInfo.Fstart = 0;

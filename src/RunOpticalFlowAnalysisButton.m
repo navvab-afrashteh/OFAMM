@@ -63,7 +63,13 @@ if handles.ImgSeqLoaded
         handles.tCLG = 0;
         handles.tHS = 0;
         for idx = FstartOF:FendOF-1
-            waitbar(idx/nFramesTodoOF,hWaitBar,sprintf('Processing frame %d of %d with CLG/HS',idx,nFramesTodoOF));
+            if runCLG && runHS
+                waitbar((idx-FstartOF+1)/nFramesTodoOF,hWaitBar,sprintf('Processing frame %d of %d with CLG and HS',idx-FstartOF+1,nFramesTodoOF));
+            elseif runHS
+                waitbar((idx-FstartOF+1)/nFramesTodoOF,hWaitBar,sprintf('Processing frame %d of %d with HS',idx-FstartOF+1,nFramesTodoOF));
+            elseif runCLG
+                waitbar((idx-FstartOF+1)/nFramesTodoOF,hWaitBar,sprintf('Processing frame %d of %d with CLG',idx-FstartOF+1,nFramesTodoOF));
+            end
             im1 = handles.ImgSeq(:,:,idx);
             im2 = handles.ImgSeq(:,:,idx+1);
 %             [im1, im2] = normalize_two_consequtive_frames(im1,im2,handles.idxMask);
