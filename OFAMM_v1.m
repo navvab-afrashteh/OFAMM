@@ -216,6 +216,8 @@ MinDispVal_default = str2num(get(handles.MaxDispVal,'string'));
 handles.MinVal = Str2NumFromHandle(handles.MinDispVal,MinDispVal_default);
 MinVal = handles.MinVal;
 MaxVal = handles.MaxVal;
+XLim = get(handles.MainAxes,'xlim');
+YLim = get(handles.MainAxes,'ylim');
 % imagesc frame and mask
 if isfield(handles,'ImgSeq')
     if handles.ImgSeqLoaded
@@ -362,17 +364,12 @@ if get(handles.Trajectory,'value') && ~metaData.playFlag
             
             if handles.TrajectoryInfo.preVal
                 if handles.TrajectoryInfo.currentFrame == frameNumber
-%                     FstartROI = handles.TrajectoryInfo.Fstart;
-%                     FstartROI = max([FstartROI, handles.FstartOFcalculated]);
-%                     FendROI = min([frameNumber,handles.FendOFcalculated]);
-                    
                     handles = FstartROI_Callback(handles.FstartROI, eventdata, handles);
                     handles = FendROI_Callback(handles.FendROI, eventdata, handles);
                     FstartROI = max([handles.ROI.Fstart, handles.FstartOFcalculated]);
                     FendROI = min([handles.ROI.Fend,handles.FendOFcalculated]);
                     set(handles.FstartROI,'string',FstartROI);
                     set(handles.FendROI,'string',FendROI);
-                
                 else
                     FstartROI = handles.TrajectoryInfo.Fstart;
                     FstartROI = max([FstartROI, handles.FstartOFcalculated]);
@@ -389,12 +386,8 @@ if get(handles.Trajectory,'value') && ~metaData.playFlag
                     output = Velocity_Profile(eval(['handles.uv',methodTraj]),startFrame,endFrame,offsetFrame,sx,sy);
                     % display
                     axes(handles.MainAxes);
-                    XLim = get(handles.MainAxes,'xlim');
-                    YLim = get(handles.MainAxes,'ylim');
                     str = streamline(output.str);
                     set(str,'Color','w'); hold on;
-                    ylim(YLim)
-                    xlim(XLim)
                     handles.TrajectoryInfo.preVal = 1;
                     handles.TrajectoryInfo.Fstart = FstartROI;
                 end
@@ -427,12 +420,8 @@ if get(handles.Trajectory,'value') && ~metaData.playFlag
                         output = Velocity_Profile(eval(['handles.uv',methodTraj]),startFrame,endFrame,offsetFrame,sx,sy);
                         % display
                         axes(handles.MainAxes);
-                        XLim = get(handles.MainAxes,'xlim');
-                        YLim = get(handles.MainAxes,'ylim');
                         str = streamline(output.str);
                         set(str,'Color','w'); hold on;
-                        ylim(YLim)
-                        xlim(XLim)
                         handles.TrajectoryInfo.preVal = 1;
                         handles.TrajectoryInfo.Fstart = FstartROI;
                     end
@@ -453,7 +442,8 @@ if get(handles.ShowROI,'Value')
         end
     end
 end
-axis equal
+ylim(YLim)
+xlim(XLim)
 
 % --- Outputs from this function are returned to the command line.
 function varargout = OFAMM_v1_OutputFcn(hObject, eventdata, handles) 
