@@ -216,8 +216,6 @@ MinDispVal_default = str2num(get(handles.MaxDispVal,'string'));
 handles.MinVal = Str2NumFromHandle(handles.MinDispVal,MinDispVal_default);
 MinVal = handles.MinVal;
 MaxVal = handles.MaxVal;
-XLim = get(handles.MainAxes,'xlim');
-YLim = get(handles.MainAxes,'ylim');
 % imagesc frame and mask
 if isfield(handles,'ImgSeq')
     if handles.ImgSeqLoaded
@@ -442,8 +440,6 @@ if get(handles.ShowROI,'Value')
         end
     end
 end
-ylim(YLim)
-xlim(XLim)
 
 % --- Outputs from this function are returned to the command line.
 function varargout = OFAMM_v1_OutputFcn(hObject, eventdata, handles) 
