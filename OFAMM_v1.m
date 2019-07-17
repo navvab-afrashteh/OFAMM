@@ -22,16 +22,16 @@ function varargout = OFAMM_v1(varargin)
 
 % Edit the above text to modify the response to help OFAMM_v1
 
-% Last Modified by GUIDE v2.5 20-Jul-2017 01:09:27
+% Last Modified by GUIDE v2.5 16-Jul-2019 17:56:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @OFAMM_v1_OpeningFcn, ...
-                   'gui_OutputFcn',  @OFAMM_v1_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @OFAMM_v1_OpeningFcn, ...
+    'gui_OutputFcn',  @OFAMM_v1_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -88,7 +88,7 @@ function handles = loadData(handles,eventdata)
 FullFileName = fullfile(handles.PathName, [handles.FileName, handles.ExtName]);
 
 if strcmp(handles.ExtName, '.tif') || strcmp(handles.ExtName, '.tiff')
-%     nFrames = input('Please insert number of frames for .tif file: ');
+    %     nFrames = input('Please insert number of frames for .tif file: ');
     handles.ImgSeq = imreadalltiff(FullFileName);
     handles.ImgSeqLoaded = 1;
 elseif strcmp(handles.ExtName, '.raw')
@@ -442,7 +442,7 @@ if get(handles.ShowROI,'Value')
 end
 
 % --- Outputs from this function are returned to the command line.
-function varargout = OFAMM_v1_OutputFcn(hObject, eventdata, handles) 
+function varargout = OFAMM_v1_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -461,25 +461,6 @@ guidata(gcbo,handles);
 
 % --- Executes on slider movement.
 function slider_frames_Callback1(hObject, eventdata, handles)
-% hObject    handle to FramesSlider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-% handles = guihandles;
-% hObject = handles.FramesSlider;
-% frameNumber = round(get(hObject,'Value'));
-% set(hObject,'Value',frameNumber);
-% handles = guidata(gcbo);
-% if frameNumber > 0
-%     thisFrame = handles.ImgSeq(:,:,frameNumber);
-% end
-% imagesc(thisFrame,'Parent',handles.MainAxes);
-% colormap jet;
-% set(handles.FrameNumber,'String',sprintf('%d of %d',frameNumber,handles.nFrames));
-% set(handles.FramesSlider,'value',frameNumber);
-% set(handles.MainAxes,'userdata',frameNumber);
 
 handles = guidata(gcbo);
 frameNumber = round(get(handles.FramesSlider,'Value'));
@@ -505,7 +486,6 @@ if isfield(handles,'ImgSeq')
             hold on;
             set(handles.FrameNumber,'String',sprintf('%d of %d',frameNumber,handles.nFrames));
             set(handles.FramesSlider,'value',frameNumber);
-%             set(handles.MainAxes,'userdata',frameNumber);
         end
     end
 end
@@ -532,7 +512,7 @@ if currentFrame == maxFrame
     currentFrame = 1;
 end
 while 1
-   metaData = get(hObject,'userData');
+    metaData = get(hObject,'userData');
     if metaData.playFlag == 0
         break;
     end
@@ -540,12 +520,12 @@ while 1
         currentFrame = currentFrame + 1;
         handles = loadFrame(handles,eventdata,currentFrame);
     else
-%         pushbutton_stop_Callback(handles.Stop, eventdata, handles)
         Stop_Callback(handles.Stop, eventdata, handles)
         break;
     end
     pause(0.01);
 end
+guidata(gcbo,handles);
 
 % --- Executes on button press in Stop.
 function Stop_Callback(hObject, eventdata, handles)
@@ -555,34 +535,13 @@ set(handles.Play,'userData',metaData);
 set(hObject,'visible','off');
 set(handles.Play,'visible','on');
 pause(0.3);
-
-
-% --- Executes on button press in pushbutton_selectROI.
-% function pushbutton_selectROI_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_selectROI (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% BW = roipoly;
-% [rows cols] = find(BW);
-% handles.mask = BW;
-% checkbox_trackROI_Callback(handles.checkbox_trackROI, eventdata, handles);
-% guidata(gcbo,handles);
-
-% --- Executes on button press in checkbox_trackROI.
-% function checkbox_trackROI_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox_trackROI (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of checkbox_trackROI
-
-% frameNumber = round(get(handles.FramesSlider,'Value'));
-% set(hObject,'userdata',frameNumber);
+guidata(gcbo,handles);
 
 % --- Executes when selected object is changed in OFParameters.
 function OFParameters_SelectionChangeFcn(hObject, eventdata, handles)
 currentFrame = round(get(handles.FramesSlider,'Value'));
 handles = loadFrame(handles,eventdata,currentFrame);
+guidata(gcbo,handles);
 
 % --- Executes on button press in VectorFieldVisChk.
 function VectorFieldVisChk_Callback(hObject, eventdata, handles)
@@ -592,22 +551,6 @@ guidata(gcbo,handles);
 
 % --- Executes on button press in pushbutton_selectPoints.
 function pushbutton_selectPoints_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_selectPoints (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% [x y] = ginput;
-% col = round(x);
-% row = round(y);
-% mask = zeros(size(handles.ImgSeq(:,:,1)));
-% for ii = 1:length(row)
-%        mask(row(ii),col(ii)) = 1;
-% end
-% handles.mask = mask;
-% checkbox_trackROI_Callback(handles.checkbox_trackROI, eventdata, handles);
-% guidata(gcbo,handles);
-% set(handles.edit_pointsToTrack,'String',sprintf('%d,%d',row,col));
-% nothin = 0;
-
 
 
 function edit_pointsToTrack_Callback(hObject, eventdata, handles)
@@ -618,8 +561,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
 function alphaCLG_Callback(hObject, eventdata, handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -627,7 +568,6 @@ function alphaCLG_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function ratioCLG_Callback(hObject, eventdata, handles)
@@ -639,7 +579,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-
 function minWidthCLG_Callback(hObject, eventdata, handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -647,7 +586,6 @@ function minWidthCLG_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function nOuterFPIterationsCLG_Callback(hObject, eventdata, handles)
@@ -698,7 +636,6 @@ function IterationsHS_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
 
 
 function CorrWinPixelsTS_Callback(hObject, eventdata, handles)
@@ -774,7 +711,7 @@ if isfield(handles,'ROI')
 else
     handles.InstSpAngcalculated = 0;
 end
-    
+
 guidata(gcbo,handles);
 
 
@@ -941,7 +878,7 @@ if plotflag && (isfield(handles,'InstSpDirCLG') || isfield(handles,'InstSpDirHS'
         set(h,'color',c1);
         hold on;
         if isfield(handles,'InstSpDirHS')
-            h = polar(tHS,rHS); 
+            h = polar(tHS,rHS);
             set(h,'color',c2);
             hold off;
             subplot(121);
@@ -952,7 +889,7 @@ if plotflag && (isfield(handles,'InstSpDirCLG') || isfield(handles,'InstSpDirHS'
         end
     else
         if isfield(handles,'InstSpDirHS')
-            h = polar(tHS,rHS); 
+            h = polar(tHS,rHS);
             set(h,'color',c2);
             hold off;
             subplot(121);
@@ -1058,7 +995,7 @@ n=0;
 % --- Executes on button press in IntensityTime.
 function handles = IntensityTime_Callback(hObject, eventdata, handles)
 [~, flag] = getimage(handles.MainAxes); % check if there is an image in the main axes
-if flag 
+if flag
     if isfield(handles,'ROI')
         if isfield(handles.ROI,'selected')
             if ~handles.ROI.selected
@@ -1087,7 +1024,7 @@ if flag
             xlabel('frame number')
             ylabel('Mean Intensity')
         else
-%             figure(101,'visible','off');
+            %             figure(101,'visible','off');
             figure(101);
             handles.IntensityFig = gcf;
             set(handles.IntensityFig,'visible','on','numbertitle','off','name','Intensity vs. Time for selected ROI');
@@ -1348,7 +1285,7 @@ if plotflag && (isfield(handles,'TempSpTrajLenCLG') || isfield(handles,'TempSpTr
     if isfield(handles,'TempSpTrajLenCLG')
         LegendCLG = plot(tSpCLG,AllSpCLG,'color',c1);hold on;
         if isfield(handles,'TempSpTrajLenHS')
-            LegendHS = plot(tSpHS,AllSpHS,'color',c2); 
+            LegendHS = plot(tSpHS,AllSpHS,'color',c2);
             legend([LegendCLG(1),LegendHS(1)],'CLG','HS','Location','best')
             hold off;
         else
@@ -1356,7 +1293,7 @@ if plotflag && (isfield(handles,'TempSpTrajLenCLG') || isfield(handles,'TempSpTr
         end
     else
         if isfield(handles,'TempSpTrajLenHS')
-            plot(tSpHS,AllSpHS,'color',c2); 
+            plot(tSpHS,AllSpHS,'color',c2);
             legend('HS','Location','best')
             hold off;
         end
@@ -2216,4 +2153,3 @@ function ShowROI_Callback(hObject, eventdata, handles)
 currentFrame = round(get(handles.FramesSlider,'Value'));
 handles = loadFrame(handles,eventdata,currentFrame);
 guidata(gcbo,handles);
-
