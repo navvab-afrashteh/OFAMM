@@ -362,8 +362,8 @@ if get(handles.Trajectory,'value') && ~metaData.playFlag
             
             if handles.TrajectoryInfo.preVal
                 if handles.TrajectoryInfo.currentFrame == frameNumber
-                    handles = FstartROI_Callback(handles.FstartROI, eventdata, handles);
-                    handles = FendROI_Callback(handles.FendROI, eventdata, handles);
+                    handles = FstartROI_fun(handles);
+                    handles = FendROI_fun(handles);
                     FstartROI = max([handles.ROI.Fstart, handles.FstartOFcalculated]);
                     FendROI = min([handles.ROI.Fend,handles.FendOFcalculated]);
                     set(handles.FstartROI,'string',FstartROI);
@@ -403,7 +403,7 @@ if get(handles.Trajectory,'value') && ~metaData.playFlag
                 end
                 
                 if handles.ROI.selected
-                    handles = FstartROI_Callback(handles.FstartROI, eventdata, handles);
+                    handles = FstartROI_fun(handles);
                     FstartROI = max([handles.ROI.Fstart, handles.FstartOFcalculated]);
                     FendROI = min([frameNumber,handles.FendOFcalculated]);
                     set(handles.FstartROI,'string',FstartROI);
@@ -489,6 +489,7 @@ if isfield(handles,'ImgSeq')
         end
     end
 end
+guidata(gcbo,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -551,9 +552,10 @@ guidata(gcbo,handles);
 
 % --- Executes on button press in pushbutton_selectPoints.
 function pushbutton_selectPoints_Callback(hObject, eventdata, handles)
-
+guidata(gcbo,handles);
 
 function edit_pointsToTrack_Callback(hObject, eventdata, handles)
+guidata(gcbo,handles);
 
 % --- Executes during object creation, after setting all properties.
 function edit_pointsToTrack_CreateFcn(hObject, eventdata, handles)
@@ -695,12 +697,12 @@ function ROISpeedAngle_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in ViewInstSpeedAngle.
 function ViewInstSpeedAngle_Callback(hObject, eventdata, handles)
-handles = InstSpDir(handles, eventdata);
+handles = InstSpDir(handles);
 if isfield(handles,'ROI')
     if isfield(handles.ROI,'selected')
         if handles.ROI.selected
             plotflag = 1;
-            handles = plotInstSpDir(handles, eventdata, plotflag);
+            handles = plotInstSpDir(handles, plotflag);
             handles.InstSpAngcalculated = 1;
         else
             handles.InstSpAngcalculated = 0;
@@ -713,190 +715,6 @@ else
 end
 
 guidata(gcbo,handles);
-
-
-function handles = InstSpDir(handles,eventdata)
-%ViewInstSpeedAngle
-
-methods = {'CLG','HS'};
-
-for method = 1:2
-    method = methods{method};
-    if isfield(handles,['uv',method,'calculated'])
-        if eval(['handles.uv',method,'calculated'])
-            handles = get_InstSpDir(handles,eventdata,method);
-        end
-    end
-end
-
-function handles = get_InstSpDir(handles,eventdata,method)
-if isfield(handles,['uv',method,'calculated'])
-    if eval(['handles.uv',method,'calculated'])
-        [~, flag] = getimage(handles.MainAxes); % check if there is an image in the main axes
-        if flag
-            if isfield(handles,'ROI')
-                if isfield(handles.ROI,'selected')
-                    if ~handles.ROI.selected
-                        handles = SelectROI(handles.SelectROI, eventdata, handles);
-                    end
-                else
-                    handles = SelectROI(handles.SelectROI, eventdata, handles);
-                end
-            else
-                handles = SelectROI(handles.SelectROI, eventdata, handles);
-            end
-            
-            if handles.ROI.selected
-                handles = FstartROI_Callback(handles.FstartROI, eventdata, handles);
-                handles = FendROI_Callback(handles.FendROI, eventdata, handles);
-                FstartROI = max([handles.ROI.Fstart, handles.FstartOFcalculated]);
-                FendROI = min([handles.ROI.Fend,handles.FendOFcalculated]);
-                set(handles.FstartROI,'string',FstartROI);
-                set(handles.FendROI,'string',FendROI);
-                
-                xy = handles.ROI.xy;
-                xyind = sub2ind([handles.dim1, handles.dim2],xy(2,:),xy(1,:));
-                nPoints = size(xy,2);
-                eval(['handles.InstSpDir',method,' = zeros(nPoints,FendROI-FstartROI);']);
-                for idx = FstartROI:FendROI-1
-                    eval(['thisframe = handles.uv',method,'(:,:,idx);']);
-                    eval(['handles.InstSpDir',method,'(:,idx) = thisframe(xyind);']);
-                end
-                eval(['handles.FstartROIuv',method,'calculated = FstartROI;']);
-                eval(['handles.FendROIuv',method,'calculated = FendROI;']);
-                eval(['handles.ROIuv',method,'calculated = xy;']);
-            end
-        end
-    end
-end
-
-function handles = plotInstSpDir(handles, eventdata, plotflag)
-
-handles = NbinSpDir_Callback(handles.NbinSpDir, eventdata, handles);
-Nbins = handles.HistRose.NbinSpDir;
-
-handles.HistRose.minSp = inf;
-handles.HistRose.maxSp = 0;
-if isfield(handles,'InstSpDirCLG')
-    handles.InstSpDirCLG(isnan(handles.InstSpDirCLG))=0;
-    handles.InstSpDirCLG(isinf(handles.InstSpDirCLG))=0;
-    
-    handles.HistRose.SpCLG = abs(handles.InstSpDirCLG);
-    handles.HistRose.minSpCLG = quantile(handles.HistRose.SpCLG(:),0.001);
-    handles.HistRose.maxSpCLG = quantile(handles.HistRose.SpCLG(:),0.999);
-    handles.HistRose.AngCLG = angle(conj(handles.InstSpDirCLG));
-    
-    handles.HistRose.minSp = min(handles.HistRose.minSp,handles.HistRose.minSpCLG);
-    handles.HistRose.maxSp = max(handles.HistRose.maxSp,handles.HistRose.maxSpCLG);
-end
-if isfield(handles,'InstSpDirHS')
-    handles.InstSpDirHS(isnan(handles.InstSpDirHS))=0;
-    handles.InstSpDirHS(isinf(handles.InstSpDirHS))=0;
-    
-    handles.HistRose.SpHS = abs(handles.InstSpDirHS);
-    handles.HistRose.minSpHS = quantile(handles.HistRose.SpHS(:),0.001);
-    handles.HistRose.maxSpHS = quantile(handles.HistRose.SpHS(:),0.999);
-    handles.HistRose.AngHS = angle(conj(handles.InstSpDirHS));
-    
-    handles.HistRose.minSp = min(handles.HistRose.minSp,handles.HistRose.minSpHS);
-    handles.HistRose.maxSp = max(handles.HistRose.maxSp,handles.HistRose.maxSpHS);
-end
-
-% calculate bin centers
-binSize = (handles.HistRose.maxSp - handles.HistRose.minSp)/Nbins;
-bins = (binSize/2+handles.HistRose.minSp):binSize:handles.HistRose.maxSp;
-
-binsAll = [];
-if isfield(handles,'InstSpDirCLG')
-    [binsCLG, ~] = hist(handles.HistRose.SpCLG(:),bins);
-    binsCLG = 100*binsCLG/length(handles.HistRose.SpCLG(:));
-    binsAll = [binsAll;binsCLG];
-    handles.InstSpCLG_ele = binsCLG;
-    handles.InstSpCLG_bins = bins;
-    
-    [tCLG, rCLG] = rose(handles.HistRose.AngCLG(:),Nbins);
-    rCLG = rCLG/max(rCLG);
-    handles.InstDirCLG_rho = rCLG;
-    handles.InstDirCLG_theta = tCLG;
-end
-if isfield(handles,'InstSpDirHS')
-    [binsHS, ~] = hist(handles.HistRose.SpHS(:),bins);
-    binsHS = 100*binsHS/length(handles.HistRose.SpHS(:));
-    binsAll = [binsAll;binsHS];
-    handles.InstSpHS_ele = binsHS;
-    handles.InstSpHS_bins = bins;
-    
-    [tHS, rHS] = rose(handles.HistRose.AngHS(:),Nbins);
-    rHS = rHS/max(rHS);
-    handles.InstDirHS_rho = rHS;
-    handles.InstDirHS_theta = tHS;
-end
-
-% plotting
-if plotflag && (isfield(handles,'InstSpDirCLG') || isfield(handles,'InstSpDirHS'))
-    if isfield(handles,'InstSpDirFig')
-        if ishandle(handles.InstSpDirFig)
-            figure(handles.InstSpDirFig);
-        else
-            handles.InstSpDirFig = figure(102);
-            set(handles.InstSpDirFig,'visible','off');
-            set(handles.InstSpDirFig,'numbertitle','off','name','Instantaneous Speeds and Angles histogram for selected ROI','units','inches','position',[1 3.5 6 2.5]);
-            set(handles.InstSpDirFig,'visible','on');
-        end
-    else
-        handles.InstSpDirFig = figure(102);
-        set(handles.InstSpDirFig,'visible','off');
-        set(handles.InstSpDirFig,'numbertitle','off','name','Instantaneous Speeds and Angles histogram for selected ROI','units','inches','position',[1 3.5 6 2.5]);
-        set(handles.InstSpDirFig,'visible','on');
-    end
-    c1 = [0.08,0.17,0.55];
-    c2 = [0.55,0,0];
-    figure(handles.InstSpDirFig);
-    subplot(121); cla;
-    h_bar = bar(bins,binsAll');
-    if length(h_bar)>1
-        set(h_bar(1),'facecolor',c1)
-        set(h_bar(2),'facecolor',c2)
-    elseif length(h_bar)==1
-        if isfield(handles,'InstSpDirCLG')
-            set(h_bar,'facecolor',c1)
-        else
-            set(h_bar,'facecolor',c2)
-        end
-    end
-    
-    maxY = max(binsAll(:));
-    xlim([min(bins)-binSize, max(bins)+binSize]);
-    ylim([0 maxY*1.1]);
-    set(gca,'box','off','TickDir','out');
-    xlabel(sprintf('Inst. Speed (p/f)')); ylabel('Percentage');
-    
-    figure(handles.InstSpDirFig);
-    subplot(122); cla;
-    if isfield(handles,'InstSpDirCLG')
-        h = polar(tCLG,rCLG);
-        set(h,'color',c1);
-        hold on;
-        if isfield(handles,'InstSpDirHS')
-            h = polar(tHS,rHS);
-            set(h,'color',c2);
-            hold off;
-            subplot(121);
-            legend('CLG','HS','Location','best')
-        else
-            subplot(121);
-            legend('CLG','Location','best')
-        end
-    else
-        if isfield(handles,'InstSpDirHS')
-            h = polar(tHS,rHS);
-            set(h,'color',c2);
-            hold off;
-            subplot(121);
-            legend('HS','Location','best')
-        end
-    end
-end
 
 
 % --- Executes on button press in pushbutton11.
@@ -1008,8 +826,8 @@ if flag
         handles = SelectROI_Callback(handles.SelectROI, eventdata, handles);
     end
     
-    handles = FstartROI_Callback(handles.FstartROI, eventdata, handles);
-    handles = FendROI_Callback(handles.FendROI, eventdata, handles);
+    handles = FstartROI_fun(handles);
+    handles = FendROI_fun(handles);
     FstartROI = handles.ROI.Fstart;
     FendROI = handles.ROI.Fend;
     handles.IntensitySig = zeros(1,FendROI-FstartROI+1);
@@ -1047,12 +865,12 @@ n=0;
 
 % --- Executes on button press in ViewTempSpeedTrajLength.
 function ViewTempSpeedTrajLength_Callback(hObject, eventdata, handles)
-handles = TempSpTrajLen(handles,eventdata);
+handles = TempSpTrajLen(handles);
 if isfield(handles,'ROI')
     if isfield(handles.ROI,'selected')
         if handles.ROI.selected
             plotflag = 1;
-            handles = plotTempSpTrajLen(handles, eventdata, plotflag);
+            handles = plotTempSpTrajLen(handles, plotflag);
             handles.TempSpTrajLengthcalculated = 1;
         else
             handles.TempSpTrajLengthcalculated = 0;
@@ -1063,596 +881,17 @@ if isfield(handles,'ROI')
 else
     handles.TempSpTrajLengthcalculated = 0;
 end
-
 guidata(gcbo,handles);
 n=0;
 
-function handles = TempSpTrajLen(handles,eventdata)
-methods = {'CLG','HS'};
-for method = 1:2
-    method = methods{method};
-    if isfield(handles,['uv',method,'calculated'])
-        if eval(['handles.uv',method,'calculated'])
-            handles = get_TempSpTrajLen(handles,eventdata,method);
-        end
-    end
-end
-
-function handles = get_TempSpTrajLen(handles,eventdata,method)
-if isfield(handles,['uv',method,'calculated'])
-    if eval(['handles.uv',method,'calculated'])
-        [~, flag] = getimage(handles.MainAxes); % check if there is an image in the main axes
-        if flag
-            if isfield(handles,'ROI')
-                if isfield(handles.ROI,'selected')
-                    if ~handles.ROI.selected
-                        handles = SelectROI(handles.SelectROI, eventdata, handles);
-                    end
-                else
-                    handles = SelectROI(handles.SelectROI, eventdata, handles);
-                end
-            else
-                handles = SelectROI(handles.SelectROI, eventdata, handles);
-            end
-            if handles.ROI.selected
-                handles = FstartROI_Callback(handles.FstartROI, eventdata, handles);
-                handles = FendROI_Callback(handles.FendROI, eventdata, handles);
-                FstartROI = max([handles.ROI.Fstart, handles.FstartOFcalculated]);
-                FendROI = min([handles.ROI.Fend,handles.FendOFcalculated]);
-                set(handles.FstartROI,'string',FstartROI);
-                set(handles.FendROI,'string',FendROI);
-                
-                xy = handles.ROI.xy;
-                sx = xy(1,:);
-                sy = xy(2,:);
-                startFrame = FstartROI;
-                endFrame = FendROI;
-                offsetFrame = 1;
-                if startFrame < endFrame
-                    output = Velocity_Profile(eval(['handles.uv',method]),startFrame,endFrame,offsetFrame,sx,sy);
-                    
-                    eval(['handles.TempSpTrajLen',method,' = output;']);
-                    eval(['handles.FstartROITemp',method,'calculated = FstartROI;']);
-                    eval(['handles.FendROITemp',method,'calculated = FendROI;']);
-                    eval(['handles.ROITemp',method,'calculated = xy;']);
-                end
-            end
-        end
-    end
-end
-
-function handles = plotTempSpTrajLen(handles, eventdata, plotflag)
-
-handles = NbinSpTraj_Callback(handles.NbinSpTraj, eventdata, handles);
-Nbins = handles.TrajHist.NbinSpTraj;
-
-handles.TrajHist.minSp = inf;
-handles.TrajHist.maxSp = 0;
-handles.TrajHist.minLen = inf;
-handles.TrajHist.maxLen = 0;
-handles.TrajHist.minMaxSp = inf;
-handles.TrajHist.maxMaxSp = 0;
-if isfield(handles,'TempSpTrajLenCLG')
-    AllSpCLG = zeros(length(handles.TempSpTrajLenCLG.speed{1}),length(handles.TempSpTrajLenCLG.speed));
-    totalDistCLG = zeros(1,length(handles.TempSpTrajLenCLG.speed));
-    for point = 1:length(handles.TempSpTrajLenCLG.speed)
-        AllSpCLG(:,point) = handles.TempSpTrajLenCLG.speed{point};
-        
-        str = handles.TempSpTrajLenCLG.str{point};
-        xs = str(:,1); ys = str(:,2);
-        vects = xs + 1i*ys;
-        diffVects = diff(vects);
-        distances = abs(diffVects);
-        totalDistCLG(point) = sum(distances);
-    end
-    
-    tSpCLG = handles.TempSpTrajLenCLG.tspeed{point};
-    AllSpCLG(isnan(AllSpCLG))=0;
-    AllSpCLG(isinf(AllSpCLG))=0;
-    totalDistCLG(isnan(totalDistCLG))=0;
-    totalDistCLG(isinf(totalDistCLG))=0;
-    AllMaxSpCLG = max(AllSpCLG);
-    
-    handles.TrajHist.minSpCLG = quantile(AllSpCLG(:),0.001);
-    handles.TrajHist.maxSpCLG = quantile(AllSpCLG(:),0.999);
-    handles.TrajHist.minSp = min(handles.TrajHist.minSp,handles.TrajHist.minSpCLG);
-    handles.TrajHist.maxSp = max(handles.TrajHist.maxSp,handles.TrajHist.maxSpCLG);
-    
-    handles.TrajHist.minLenCLG = quantile(totalDistCLG(:),0.001);
-    handles.TrajHist.maxLenCLG = quantile(totalDistCLG(:),0.999);
-    handles.TrajHist.minLen = min(handles.TrajHist.minLen,handles.TrajHist.minLenCLG);
-    handles.TrajHist.maxLen = max(handles.TrajHist.maxLen,handles.TrajHist.maxLenCLG);
-    
-    handles.TrajHist.minMaxSpCLG = quantile(AllMaxSpCLG,0.001);
-    handles.TrajHist.maxMaxSpCLG = quantile(AllMaxSpCLG,0.999);
-    handles.TrajHist.minMaxSp = min(handles.TrajHist.minMaxSp,handles.TrajHist.minMaxSpCLG);
-    handles.TrajHist.maxMaxSp = max(handles.TrajHist.maxMaxSp,handles.TrajHist.maxMaxSpCLG);
-end
-
-if isfield(handles,'TempSpTrajLenHS')
-    AllSpHS = zeros(length(handles.TempSpTrajLenHS.speed{1}),length(handles.TempSpTrajLenHS.speed));
-    totalDistHS = zeros(1,length(handles.TempSpTrajLenHS.speed));
-    for point = 1:length(handles.TempSpTrajLenHS.speed)
-        AllSpHS(:,point) = handles.TempSpTrajLenHS.speed{point};
-        
-        str = handles.TempSpTrajLenHS.str{point};
-        xs = str(:,1); ys = str(:,2);
-        vects = xs + 1i*ys;
-        diffVects = diff(vects);
-        distances = abs(diffVects);
-        totalDistHS(point) = sum(distances);
-    end
-    AllMaxSpHS = max(AllSpHS);
-    tSpHS = handles.TempSpTrajLenHS.tspeed{point};
-    AllSpHS(isnan(AllSpHS))=0;
-    AllSpHS(isinf(AllSpHS))=0;
-    totalDistHS(isnan(totalDistHS))=0;
-    totalDistHS(isinf(totalDistHS))=0;
-    
-    handles.TrajHist.minSpHS = quantile(AllSpHS(:),0.001);
-    handles.TrajHist.maxSpHS = quantile(AllSpHS(:),0.999);
-    handles.TrajHist.minSp = min(handles.TrajHist.minSp,handles.TrajHist.minSpHS);
-    handles.TrajHist.maxSp = max(handles.TrajHist.maxSp,handles.TrajHist.maxSpHS);
-    
-    handles.TrajHist.minLenHS = quantile(totalDistHS(:),0.001);
-    handles.TrajHist.maxLenHS = quantile(totalDistHS(:),0.999);
-    handles.TrajHist.minLen = min(handles.TrajHist.minLen,handles.TrajHist.minLenHS);
-    handles.TrajHist.maxLen = max(handles.TrajHist.maxLen,handles.TrajHist.maxLenHS);
-    
-    handles.TrajHist.minMaxSpHS = quantile(AllMaxSpHS,0.001);
-    handles.TrajHist.maxMaxSpHS = quantile(AllMaxSpHS,0.999);
-    handles.TrajHist.minMaxSp = min(handles.TrajHist.minMaxSp,handles.TrajHist.minMaxSpHS);
-    handles.TrajHist.maxMaxSp = max(handles.TrajHist.maxMaxSp,handles.TrajHist.maxMaxSpHS);
-end
-
-% calculate bin centers
-binSizeSp = (handles.TrajHist.maxSp - handles.TrajHist.minSp)/Nbins;
-binsSp = (binSizeSp/2+handles.TrajHist.minSp):binSizeSp:handles.TrajHist.maxSp;
-
-binSizeLen = (handles.TrajHist.maxLen - handles.TrajHist.minLen)/Nbins;
-binsLen = (binSizeLen/2+handles.TrajHist.minLen):binSizeLen:handles.TrajHist.maxLen;
-
-binSizeMaxSp = (handles.TrajHist.maxMaxSp - handles.TrajHist.minMaxSp)/Nbins;
-binsMaxSp = (binSizeMaxSp/2+handles.TrajHist.minMaxSp):binSizeMaxSp:handles.TrajHist.maxMaxSp;
-
-binsAllSp = [];
-binsAllLen = [];
-binsAllMaxSp = [];
-if isfield(handles,'TempSpTrajLenCLG')
-    [binsSpCLG, ~] = hist(AllSpCLG(:),binsSp);
-    binsSpCLG = 100*binsSpCLG/length(AllSpCLG(:));
-    binsAllSp = [binsAllSp;binsSpCLG];
-    handles.TempSpCLG_ele = binsSpCLG;
-    handles.TempSpCLG_bins = binsSp;
-    
-    [binsLenCLG, ~] = hist(totalDistCLG,binsLen);
-    binsLenCLG = 100*binsLenCLG/length(totalDistCLG);
-    binsAllLen = [binsAllLen;binsLenCLG];
-    handles.TempLenCLG_ele = binsLenCLG;
-    handles.TempLenCLG_bins = binsLen;
-    
-    [binsMaxCLG, ~] = hist(AllMaxSpCLG(:),binsMaxSp);
-    binsMaxCLG = 100*binsMaxCLG/length(AllMaxSpCLG(:));
-    binsAllMaxSp = [binsAllMaxSp;binsMaxCLG];
-    handles.MaxTempSpCLG_ele = binsMaxCLG;
-    handles.MaxTempSpCLG_bins = binsMaxSp;
-end
-
-if isfield(handles,'TempSpTrajLenHS')
-    [binsSpHS, ~] = hist(AllSpHS(:),binsSp);
-    binsSpHS = 100*binsSpHS/length(AllSpHS(:));
-    binsAllSp = [binsAllSp;binsSpHS];
-    handles.TempSpHS_ele = binsSpHS;
-    handles.TempSpHS_bins = binsSp;
-    
-    [binsLenHS, ~] = hist(totalDistHS,binsLen);
-    binsLenHS = 100*binsLenHS/length(totalDistHS);
-    binsAllLen = [binsAllLen;binsLenHS];
-    handles.TempLenHS_ele = binsLenHS;
-    handles.TempLenHS_bins = binsLen;
-    
-    [binsMaxHS, ~] = hist(AllMaxSpHS(:),binsMaxSp);
-    binsMaxHS = 100*binsMaxHS/length(AllMaxSpHS(:));
-    binsAllMaxSp = [binsAllMaxSp;binsMaxHS];
-    handles.MaxTempSpHS_ele = binsMaxHS;
-    handles.MaxTempSpHS_bins = binsMaxSp;
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% plotting
-if plotflag && (isfield(handles,'TempSpTrajLenCLG') || isfield(handles,'TempSpTrajLenHS'))
-    if isfield(handles,'TempSptrajLenFig')
-        if ishandle(handles.TempSptrajLenFig)
-            figure(handles.TempSptrajLenFig);
-        else
-            handles.TempSptrajLenFig = figure(103);
-            set(handles.TempSptrajLenFig,'visible','off');
-            set(handles.TempSptrajLenFig,'numbertitle','off','name','Temporal Speeds, profile and histogram, and Trajectory Length histogram for selected ROI','units','inches','position',[1 1 12 2.5]);
-            set(handles.TempSptrajLenFig,'visible','on');
-        end
-    else
-        handles.TempSptrajLenFig = figure(103);
-        set(handles.TempSptrajLenFig,'visible','off');
-        set(handles.TempSptrajLenFig,'numbertitle','off','name','Temporal Speeds, profile and histogram, and Trajectory Length histogram for selected ROI','units','inches','position',[1 1 12 2.5]);
-        set(handles.TempSptrajLenFig,'visible','on');
-    end
-    clf
-    % temporal profile
-    c1 = [0.08,0.17,0.55];
-    c2 = [0.55,0,0];
-    figure(handles.TempSptrajLenFig);
-    subplot(141); cla;
-    if isfield(handles,'TempSpTrajLenCLG')
-        LegendCLG = plot(tSpCLG,AllSpCLG,'color',c1);hold on;
-        if isfield(handles,'TempSpTrajLenHS')
-            LegendHS = plot(tSpHS,AllSpHS,'color',c2);
-            legend([LegendCLG(1),LegendHS(1)],'CLG','HS','Location','best')
-            hold off;
-        else
-            legend('CLG','Location','best')
-        end
-    else
-        if isfield(handles,'TempSpTrajLenHS')
-            plot(tSpHS,AllSpHS,'color',c2);
-            legend('HS','Location','best')
-            hold off;
-        end
-    end
-    ylabel('Temp. Speed (p/f)');
-    xlabel('Frame Number');
-    
-    % teporal speed histogram
-    figure(handles.TempSptrajLenFig);
-    subplot(142); cla;
-    
-    h_bar = bar(binsSp,binsAllSp');
-    if length(h_bar)>1
-        set(h_bar(1),'facecolor',c1)
-        set(h_bar(2),'facecolor',c2)
-    elseif length(h_bar)==1
-        if isfield(handles,'TempSpTrajLenCLG')
-            set(h_bar,'facecolor',c1)
-        else
-            set(h_bar,'facecolor',c2)
-        end
-    end
-    
-    maxY = max(binsAllSp(:));
-    xlim([min(binsSp)-binSizeSp, max(binsSp)+binSizeSp]);
-    ylim([0 maxY*1.1]);
-    set(gca,'box','off','TickDir','out');
-    xlabel(sprintf('Temp. Speed (p/f)')); ylabel('Percentage');
-    
-    % Maximum teporal speed histogram
-    figure(handles.TempSptrajLenFig);
-    subplot(143); cla;
-    
-    h_bar = bar(binsMaxSp,binsAllMaxSp');
-    if length(h_bar)>1
-        set(h_bar(1),'facecolor',c1)
-        set(h_bar(2),'facecolor',c2)
-    elseif length(h_bar)==1
-        if isfield(handles,'TempSpTrajLenCLG')
-            set(h_bar,'facecolor',c1)
-        else
-            set(h_bar,'facecolor',c2)
-        end
-    end
-    
-    maxY = max(binsAllMaxSp(:));
-    xlim([min(binsMaxSp)-binSizeMaxSp, max(binsMaxSp)+binSizeMaxSp]);
-    ylim([0 maxY*1.1]);
-    set(gca,'box','off','TickDir','out');
-    xlabel(sprintf('Max Temp. Speed (p/f)')); ylabel('Percentage');
-    
-    % Trajectory Distance histogram
-    figure(handles.TempSptrajLenFig);
-    subplot(144); cla;
-    
-    h_bar = bar(binsLen,binsAllLen');
-    if length(h_bar)>1
-        set(h_bar(1),'facecolor',c1)
-        set(h_bar(2),'facecolor',c2)
-    elseif length(h_bar)==1
-        if isfield(handles,'TempSpTrajLenCLG')
-            set(h_bar,'facecolor',c1)
-        else
-            set(h_bar,'facecolor',c2)
-        end
-    end
-    
-    maxY = max(binsAllLen(:));
-    xlim([min(binsLen)-binSizeLen, max(binsLen)+binSizeLen]);
-    ylim([0 maxY*1.1]);
-    set(gca,'box','off','TickDir','out');
-    xlabel(sprintf('Trajectory Length (pixels)')); ylabel('Percentage');
-end
-
-
 % --- Executes on button press in SaveSpeedAngle.
 function SaveSpeedAngle_Callback(hObject, eventdata, handles)
-handles = FstartROI_Callback(handles.FstartROI, eventdata, handles);
-handles = FendROI_Callback(handles.FendROI, eventdata, handles);
-if isfield(handles,'FstartOFcalculated')
-    FstartROI = max([handles.ROI.Fstart, handles.FstartOFcalculated]);
-else
-    FstartROI = handles.ROI.Fstart;
-end
-if isfield(handles,'FendOFcalculated')
-    FendROI = min([handles.ROI.Fend,handles.FendOFcalculated]);
-else
-    FendROI = handles.ROI.Fend;
-end
-set(handles.FstartROI,'string',FstartROI);
-set(handles.FendROI,'string',FendROI);
-
-% CLG InstSpAng
-if isfield(handles,'InstSpAngcalculated')
-    if isfield(handles,'ROI')
-        if isfield(handles.ROI,'selected')
-            if handles.ROI.selected && isfield(handles,'FstartROIuvCLGcalculated') &&...
-                    isfield(handles,'FendROIuvCLGcalculated') && isfield(handles,'ROIuvCLGcalculated')
-                if (handles.ROI.Fstart == handles.FstartROIuvCLGcalculated) &&...
-                        (handles.ROI.Fend == handles.FendROIuvCLGcalculated) &&...
-                        (size(handles.ROI.xy,2) == size(handles.ROIuvCLGcalculated,2))
-                    if handles.ROI.xy == handles.ROIuvCLGcalculated
-                        saveInstSpAngCLG = 1;
-                    else
-                        saveInstSpAngCLG = 0; % go and calc inst for CLG
-                    end
-                else
-                    saveInstSpAngCLG = 0; % go and calc inst for CLG
-                end
-                saveInstSpAngCLG = 1;
-            else
-                saveInstSpAngCLG = 0; % go and calc inst for CLG
-            end
-        else
-            saveInstSpAngCLG = 0; % go and calc inst for CLG
-        end
-    end
-else
-    if isfield(handles,'uvCLGcalculated')
-        if  handles.uvCLGcalculated
-            %             if ~isfield(handles,'ROI')
-            %                 handles = SelectROI(handles.SelectROI, eventdata, handles);
-            %             end
-            saveInstSpAngCLG = 0; % go and calc inst for CLG
-        end
-    end
-end
-
-% HS InstSpAng
-if isfield(handles,'InstSpAngcalculated')
-    if isfield(handles,'ROI')
-        if isfield(handles.ROI,'selected')
-            if handles.ROI.selected && isfield(handles,'FstartROIuvHScalculated') &&...
-                    isfield(handles,'FendROIuvHScalculated') && isfield(handles,'ROIuvHScalculated')
-                if (handles.ROI.Fstart == handles.FstartROIuvHScalculated) &&...
-                        (handles.ROI.Fend == handles.FendROIuvHScalculated) &&...
-                        (size(handles.ROI.xy,2) == size(handles.ROIuvCLGcalculated,2))
-                    if handles.ROI.xy == handles.ROIuvCLGcalculated
-                        saveInstSpAngHS = 1;
-                    else
-                        saveInstSpAngHS = 0; % go and calc inst for HS
-                    end
-                else
-                    saveInstSpAngHS = 0; % go and calc inst for HS
-                end
-                saveInstSpAngHS = 1;
-            else
-                saveInstSpAngHS = 0; % go and calc inst for HS
-            end
-        else
-            saveInstSpAngHS = 0; % go and calc inst for HS
-        end
-    end
-else
-    if isfield(handles,'uvHScalculated')
-        if  handles.uvHScalculated
-            %             if ~isfield(handles,'ROI')
-            %                 handles = SelectROI(handles.SelectROI, eventdata, handles);
-            %             end
-            saveInstSpAngHS = 0; % go and calc inst for HS
-        end
-    end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CLG TempSpTraj
-if isfield(handles,'TempSpTrajLengthcalculated')
-    if isfield(handles,'ROI')
-        if isfield(handles.ROI,'selected')
-            if handles.ROI.selected && isfield(handles,'FstartROITempCLGcalculated') &&...
-                    isfield(handles,'FendROITempCLGcalculated') && isfield(handles,'ROITempCLGcalculated')
-                if (handles.ROI.Fstart == handles.FstartROITempCLGcalculated) &&...
-                        (handles.ROI.Fend == handles.FendROITempCLGcalculated) &&...
-                        (size(handles.ROI.xy,2) == size(handles.ROITempCLGcalculated,2))
-                    if handles.ROI.xy == handles.ROITempCLGcalculated
-                        saveTempSpTrajCLG = 1;
-                    else
-                        saveTempSpTrajCLG = 0; % go and calc temp for CLG
-                    end
-                else
-                    saveTempSpTrajCLG = 0; % go and calc temp for CLG
-                end
-                saveTempSpTrajCLG = 1;
-            else
-                saveTempSpTrajCLG = 0; % go and calc temp for CLG
-            end
-        else
-            saveTempSpTrajCLG = 0; % go and calc temp for CLG
-        end
-    end
-else
-    if isfield(handles,'uvCLGcalculated')
-        if  handles.uvCLGcalculated
-            %             if ~isfield(handles,'ROI')
-            %                 handles = SelectROI(handles.SelectROI, eventdata, handles);
-            %             end
-            saveTempSpTrajCLG = 0; % go and calc temp for CLG
-        end
-    end
-end
-
-% HS TempSpTraj
-if isfield(handles,'TempSpTrajLengthcalculated')
-    if isfield(handles,'ROI')
-        if isfield(handles.ROI,'selected')
-            if handles.ROI.selected  && isfield(handles,'FstartROITempHScalculated') &&...
-                    isfield(handles,'FendROITempHScalculated') && isfield(handles,'ROITempHScalculated')
-                if (handles.ROI.Fstart == handles.FstartROITempHScalculated) &&...
-                        (handles.ROI.Fend == handles.FendROITempHScalculated) &&...
-                        (size(handles.ROI.xy,2) == size(handles.ROITempHScalculated,2))
-                    if handles.ROI.xy == handles.ROITempHScalculated
-                        saveTempSpTrajHS = 1;
-                    else
-                        saveTempSpTrajHS = 0; % go and calc temp for HS
-                    end
-                else
-                    saveTempSpTrajHS = 0; % go and calc temp for HS
-                end
-                saveTempSpTrajHS = 1;
-            else
-                saveTempSpTrajHS = 0; % go and calc temp for HS
-            end
-        else
-            saveTempSpTrajHS = 0; % go and calc temp for HS
-        end
-    end
-else
-    if isfield(handles,'uvHScalculated')
-        if  handles.uvHScalculated
-            %             if ~isfield(handles,'ROI')
-            %                 handles = SelectROI(handles.SelectROI, eventdata, handles);
-            %             end
-            saveTempSpTrajHS = 0; % go and calc temp for HS
-        end
-    end
-end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% go and calc inst for CLG & HS
-if isfield(handles,'uvCLGcalculated') || isfield(handles,'uvHScalculated')
-    if  handles.uvCLGcalculated || handles.uvHScalculated
-        if saveInstSpAngCLG == 0 || saveInstSpAngHS == 0
-            handles = InstSpDir(handles, eventdata);
-            if handles.ROI.selected
-                plotflag = 0;
-                handles = plotInstSpDir(handles, eventdata, plotflag);
-                handles.InstSpAngcalculated = 1;
-            end
-        end
-    end
-end
-
-% go and calc temp for CLG & HS
-if isfield(handles,'uvCLGcalculated') || isfield(handles,'uvHScalculated')
-    if  handles.uvCLGcalculated || handles.uvHScalculated
-        if saveTempSpTrajCLG == 0 || saveTempSpTrajHS == 0
-            handles = TempSpTrajLen(handles,eventdata);
-            if handles.ROI.selected
-                plotflag = 1;
-                handles = plotTempSpTrajLen(handles, eventdata, plotflag);
-                handles.TempSpTrajLengthcalculated = 1;
-            end
-        end
-    end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isfield(handles.ROI,'selected')
-    handles.ROI.selected = 0;
-end
-if handles.ROI.selected
-    handles = ROISaveNameSpeedAngle_Callback(handles.ROISaveNameSpeedAngle, eventdata, handles);
-    FileName_save_SpAngTraj = handles.FileName_save_SpAngTraj;
-    
-    if isfield(handles,'PathName')
-        handles.SavePathName = handles.PathName;
-    else
-        handles.SavePathName = pwd; % current folder
-    end
-    % save for CLG
-    if isfield(handles,'uvCLGcalculated')
-        if  handles.uvCLGcalculated
-            if ~exist(handles.SavePathName,'dir')
-                mkdir(handles.SavePathName);
-            end
-            SaveFullFileName = [handles.SavePathName,'\',FileName_save_SpAngTraj,'.mat'];
-            if exist(SaveFullFileName)
-                load(SaveFullFileName);
-            end
-            mFileROI_InstSpAng_TempSpTraj = matfile(SaveFullFileName,'Writable',true);
-            
-            InstSpAng.CLG.uv = handles.InstSpDirCLG;
-            InstSpAng.CLG.SpHist.ele = handles.InstSpCLG_ele;
-            InstSpAng.CLG.SpHist.bins = handles.InstSpCLG_bins;
-            InstSpAng.CLG.AngHist.rho = handles.InstDirCLG_rho;
-            InstSpAng.CLG.AngHist.theta = handles.InstDirCLG_theta;
-            
-            mFileROI_InstSpAng_TempSpTraj.InstSpAng = InstSpAng;
-            
-            TempSpTraj.CLG.StrLines = handles.TempSpTrajLenCLG;
-            TempSpTraj.CLG.TempSpHist.ele = handles.TempSpCLG_ele;
-            TempSpTraj.CLG.TempSpHist.bins = handles.TempSpCLG_bins;
-            TempSpTraj.CLG.TempLenHist.ele = handles.TempLenCLG_ele;
-            TempSpTraj.CLG.TempLenHist.bins = handles.TempLenCLG_bins;
-            TempSpTraj.CLG.MaxTempSpHist.ele = handles.MaxTempSpCLG_ele;
-            TempSpTraj.CLG.MaxTempSpHist.bins = handles.MaxTempSpCLG_bins;
-            
-            mFileROI_InstSpAng_TempSpTraj.TempSpTraj = TempSpTraj;
-        end
-    end
-    
-    % save for HS
-    if isfield(handles,'uvHScalculated')
-        if  handles.uvHScalculated
-            if ~exist(handles.SavePathName,'dir')
-                mkdir(handles.SavePathName);
-            end
-            SaveFullFileName = [handles.SavePathName,'\',FileName_save_SpAngTraj,'.mat'];
-            if exist(SaveFullFileName)
-                load(SaveFullFileName);
-            end
-            mFileROI_InstSpAng_TempSpTraj = matfile(SaveFullFileName,'Writable',true);
-            
-            InstSpAng.HS.uv = handles.InstSpDirHS;
-            InstSpAng.HS.SpHist.ele = handles.InstSpHS_ele;
-            InstSpAng.HS.SpHist.bins = handles.InstSpHS_bins;
-            InstSpAng.HS.AngHist.rho = handles.InstDirHS_rho;
-            InstSpAng.HS.AngHist.theta = handles.InstDirHS_theta;
-            
-            mFileROI_InstSpAng_TempSpTraj.InstSpAng = InstSpAng;
-            
-            TempSpTraj.HS.StrLines = handles.TempSpTrajLenHS;
-            TempSpTraj.HS.TempSpHist.ele = handles.TempSpHS_ele;
-            TempSpTraj.HS.TempSpHist.bins = handles.TempSpHS_bins;
-            TempSpTraj.HS.TempLenHist.ele = handles.TempLenHS_ele;
-            TempSpTraj.HS.TempLenHist.bins = handles.TempLenHS_bins;
-            TempSpTraj.HS.MaxTempSpHist.ele = handles.MaxTempSpHS_ele;
-            TempSpTraj.HS.MaxTempSpHist.bins = handles.MaxTempSpHS_bins;
-            
-            mFileROI_InstSpAng_TempSpTraj.TempSpTraj = TempSpTraj;
-        end
-    end
-    
-end
-
+handles = SaveSpeedAngle_fun(handles);
 guidata(gcbo,handles);
 
 
 % --- Executes on button press in ViewTraj.
 function ViewTraj_Callback(hObject, eventdata, handles)
-
-
-function handles = ROISaveNameSpeedAngle_Callback(hObject, eventdata, handles)
-handles.FileName_save_SpAngTraj = get(hObject,'string');
-handles.FileName_save_SpAngTraj = strtrim(handles.FileName_save_SpAngTraj);
-if strcmp(handles.FileName_save_SpAngTraj,'')
-    handles.FileName_save_SpAngTraj = 'ROI_InstSpAng_TempSpTraj';
-    set(hObject,'string',handles.FileName_save_SpAngTraj);
-end
-guidata(gcbo,handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1774,14 +1013,6 @@ if flag
     guidata(gcbo,handles);
 end
 
-function handles = FstartROI_Callback(hObject, eventdata, handles)
-FstartROI_default = 1;
-FstartROI = Str2NumFromHandle(handles.FstartROI,FstartROI_default);
-FstartROI = round(FstartROI);
-set(handles.FstartROI,'string',FstartROI);
-handles.ROI.Fstart = FstartROI;
-guidata(gcbo,handles);
-
 
 % --- Executes during object creation, after setting all properties.
 function FstartROI_CreateFcn(hObject, eventdata, handles)
@@ -1789,19 +1020,6 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
-
-
-function handles = FendROI_Callback(hObject, eventdata, handles)
-if isfield(handles,'nFrames')
-    FendROI_default = handles.nFrames;
-else
-    FendROI_default = 1;
-end
-FendROI = Str2NumFromHandle(handles.FendROI,FendROI_default);
-FendROI = round(FendROI);
-set(handles.FendROI,'string',FendROI);
-handles.ROI.Fend = FendROI;
-guidata(gcbo,handles);
 
 % --- Executes during object creation, after setting all properties.
 function FendROI_CreateFcn(hObject, eventdata, handles)
@@ -1840,8 +1058,8 @@ if get(hObject,'value')
             end
             
             if handles.ROI.selected
-                handles = FstartROI_Callback(handles.FstartROI, eventdata, handles);
-                handles = FendROI_Callback(handles.FendROI, eventdata, handles);
+                handles = FstartROI_fun(handles);
+                handles = FendROI_fun(handles);
                 FstartROI = max([handles.ROI.Fstart, handles.FstartOFcalculated]);
                 FendROI = min([handles.ROI.Fend,handles.FendOFcalculated]);
                 set(handles.FstartROI,'string',FstartROI);
@@ -1876,29 +1094,19 @@ end
 guidata(gcbo,handles);
 
 
-function handles = NbinSpDir_Callback(hObject, eventdata, handles)
-NbinSpDir_default = 20;
-NbinSpDir = Str2NumFromHandle(handles.NbinSpDir,NbinSpDir_default);
-NbinSpDir = round(NbinSpDir);
-set(handles.NbinSpDir,'string',NbinSpDir);
-handles.HistRose.NbinSpDir = NbinSpDir;
-guidata(gcbo,handles);
-
-
 % --- Executes during object creation, after setting all properties.
 function NbinSpDir_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
+function handles = NbinSpDir_Callback(hObject, eventdata, handles)
+handles = NbinSpDir_fun(handles);
+guidata(gcbo,handles);
 
 
 function handles = NbinSpTraj_Callback(hObject, eventdata, handles)
-NbinSpTraj_default = 20;
-NbinSpTraj = Str2NumFromHandle(handles.NbinSpTraj,NbinSpTraj_default);
-NbinSpTraj = round(NbinSpTraj);
-set(handles.NbinSpTraj,'string',NbinSpTraj);
-handles.TrajHist.NbinSpTraj = NbinSpTraj;
+handles = NbinSpTraj_fun(handles);
 guidata(gcbo,handles);
 
 
@@ -1907,6 +1115,20 @@ function NbinSpTraj_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+function handles = ROISaveNameSpeedAngle_Callback(hObject, eventdata, handles)
+handles = ROISaveNameSpeedAngle_fun(handles);
+guidata(gcbo,handles);
+
+function handles = FendROI_Callback(hObject, eventdata, handles)
+handles = FendROI_fun(handles);
+guidata(gcbo,handles);
+
+
+function handles = FstartROI_Callback(hObject, eventdata, handles)
+handles = FstartROI_fun(handles);
+guidata(gcbo,handles);
 
 
 % --- Executes on button press in CLGVisSS.
@@ -2025,7 +1247,7 @@ if get(hObject,'Value')
 else
     zoom off
 end
-
+guidata(gcbo,handles);
 
 % --- Executes on button press in CursorChk.
 function CursorChk_Callback(hObject, eventdata, handles)
@@ -2035,7 +1257,7 @@ if get(hObject,'Value')
 else
     datacursormode off
 end
-
+guidata(gcbo,handles);
 
 % --- Executes on button press in Help.
 function Help_Callback(hObject, eventdata, handles)
@@ -2044,7 +1266,7 @@ slashPos = find(OFAMMfilePath == '\');
 PathName = OFAMMfilePath(1:slashPos(end));
 ReadmePathName = [PathName 'Readme.txt'];
 eval(['!notepad ' ReadmePathName])
-
+guidata(gcbo,handles);
 
 % --- Executes on button press in AboutOFAMM.
 function AboutOFAMM_Callback(hObject, eventdata, handles)
@@ -2061,6 +1283,7 @@ if ~isfield(handles,'AboutFig')
     set(handles.AboutFig,'visible','on','numbertitle','off','Resize','on','name','About OFAMM');
 end
 AboutOFAMMWin
+guidata(gcbo,handles);
 
 function AboutOFAMMWin
 a = 0.2;

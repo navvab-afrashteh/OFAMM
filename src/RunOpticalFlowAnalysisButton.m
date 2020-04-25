@@ -4,57 +4,62 @@ if ~isfield(handles,'ImgSeqLoaded')
 end
 if handles.ImgSeqLoaded
     % CLG
-    runCLG = get(handles.runCLG,'value');
-    % CLG default values
-    CLGparams_default.alpha = 0.03;
-    CLGparams_default.ratio = 0.5;
-    CLGparams_default.minWidth = round(min(handles.dim1,handles.dim2)*CLGparams_default.ratio/2);
-    CLGparams_default.nOuterFPIterations = 7;
-    CLGparams_default.nInnerFPIterations = 1;
-    CLGparams_default.nSORIterations = 30;
-    CLGparams.alpha = Str2NumFromHandle(handles.alphaCLG,CLGparams_default.alpha);
-    CLGparams.ratio = Str2NumFromHandle(handles.ratioCLG,CLGparams_default.ratio);
-    CLGparams.minWidth = Str2NumFromHandle(handles.minWidthCLG,CLGparams_default.minWidth);
-    CLGparams.nOuterFPIterations = Str2NumFromHandle(handles.nOuterFPIterationsCLG,CLGparams_default.nOuterFPIterations);
-    CLGparams.nInnerFPIterations = Str2NumFromHandle(handles.nInnerFPIterationsCLG,CLGparams_default.nInnerFPIterations);
-    CLGparams.nSORIterations = Str2NumFromHandle(handles.nSORIterationsCLG,CLGparams_default.nSORIterations);
-    
-    para = [CLGparams.alpha,CLGparams.ratio,CLGparams.minWidth,...
-        CLGparams.nOuterFPIterations,CLGparams.nInnerFPIterations,CLGparams.nSORIterations];
-    
+    runCLG = 0;
+    try runCLG = get(handles.runCLG,'value'); catch, try runCLG = handles.runCLG; end; end
     % HS
-    runHS = get(handles.runHS,'value');
-    % HS default values
-    HSparams_default.alpha = 0.35;
-    HSparams_default.iterations = 2000;
-    HSparams.alpha = Str2NumFromHandle(handles.alphaHS,HSparams_default.alpha);
-    HSparams.iterations = Str2NumFromHandle(handles.IterationsHS,HSparams_default.iterations);
-    
+    runHS = 0;
+    try runHS = get(handles.runHS,'value'); catch, try runHS = handles.runHS; end; end
     % TS
-    runTS = get(handles.runTS,'value');
-    TSparams_default.CorrWinPixels = 3;
-    TSparams_default.CorrWinFrames = handles.nFrames;
-    TSparams_default.TargetFrames = round(handles.nFrames/2);
-    TSparams_default.MaxLag = round(handles.nFrames/20);
-    TSparams.CorrWinPixels = Str2NumFromHandle(handles.CorrWinPixelsTS,TSparams_default.CorrWinPixels);
-    TSparams.CorrWinFrames = Str2NumFromHandle(handles.CorrWinFramesTS,TSparams_default.CorrWinFrames);
-    TSparams.MaxLag = Str2NumFromHandle(handles.MaxLagTS,TSparams_default.MaxLag);
-    TSparams.TargetFrames = Str2NumFromHandle(handles.TargetFramesTS,TSparams_default.TargetFrames);
-    
+    runTS = 0;
+    try runTS = get(handles.runTS,'value'); catch, try runTS = handles.runTS; end; end
     % find first and last frame to calculate OF
     FstartOF_default = 1;
     FendOF_default = handles.nFrames;
-    FstartOF = Str2NumFromHandle(handles.FstartOF,FstartOF_default); FstartOF = ceil(FstartOF);
-    FendOF = Str2NumFromHandle(handles.FendOF,FendOF_default); FendOF = ceil(FendOF);
-    % update fields
-    set(handles.FstartOF,'string',num2str(FstartOF));
-    set(handles.FendOF,'string',num2str(FendOF));
-    
+    try
+        FstartOF = Str2NumFromHandle(handles.FstartOF,FstartOF_default); FstartOF = ceil(FstartOF);
+        FendOF = Str2NumFromHandle(handles.FendOF,FendOF_default); FendOF = ceil(FendOF);
+        % update fields
+        set(handles.FstartOF,'string',num2str(FstartOF));
+        set(handles.FendOF,'string',num2str(FendOF));
+    catch
+        FstartOF = handles.FstartOF;
+        FendOF = handles.FendOF;
+    end
+    % params and allocation for CLG
     if runCLG
         handles.uvCLG = zeros(handles.dim1, handles.dim2, FendOF-FstartOF);
+        % CLG default values
+        CLGparams_default.alpha = 0.03;
+        CLGparams_default.ratio = 0.5;
+        CLGparams_default.minWidth = round(min(handles.dim1,handles.dim2)*CLGparams_default.ratio/2);
+        CLGparams_default.nOuterFPIterations = 7;
+        CLGparams_default.nInnerFPIterations = 1;
+        CLGparams_default.nSORIterations = 30;
+        try
+            CLGparams.alpha = Str2NumFromHandle(handles.alphaCLG,CLGparams_default.alpha);
+            CLGparams.ratio = Str2NumFromHandle(handles.ratioCLG,CLGparams_default.ratio);
+            CLGparams.minWidth = Str2NumFromHandle(handles.minWidthCLG,CLGparams_default.minWidth);
+            CLGparams.nOuterFPIterations = Str2NumFromHandle(handles.nOuterFPIterationsCLG,CLGparams_default.nOuterFPIterations);
+            CLGparams.nInnerFPIterations = Str2NumFromHandle(handles.nInnerFPIterationsCLG,CLGparams_default.nInnerFPIterations);
+            CLGparams.nSORIterations = Str2NumFromHandle(handles.nSORIterationsCLG,CLGparams_default.nSORIterations);
+        catch
+            CLGparams = handles.CLGparams;
+        end
+        para = [CLGparams.alpha,CLGparams.ratio,CLGparams.minWidth,...
+            CLGparams.nOuterFPIterations,CLGparams.nInnerFPIterations,CLGparams.nSORIterations];
     end
+    % params and allocation for HS
     if runHS
         handles.uvHS = zeros(handles.dim1, handles.dim2, FendOF-FstartOF);
+        % HS default values
+        HSparams_default.alpha = 0.35;
+        HSparams_default.iterations = 2000;
+        try
+            HSparams.alpha = Str2NumFromHandle(handles.alphaHS,HSparams_default.alpha);
+            HSparams.iterations = Str2NumFromHandle(handles.IterationsHS,HSparams_default.iterations);
+        catch
+            HSparams = handles.HSparams;
+        end
     end
     % run OF for CLG or HS if applicable
     if runCLG || runHS
@@ -80,6 +85,7 @@ if handles.ImgSeqLoaded
                 t = toc;
                 handles.tCLG = handles.tCLG+t;
                 handles.uvCLG(:,:,idx) = (u +1i*v);
+                handles.uvCLGcalculated = 1;
             end
             % HS
             if runHS
@@ -88,21 +94,27 @@ if handles.ImgSeqLoaded
                 t = toc;
                 handles.tHS = handles.tHS+t;
                 handles.uvHS(:,:,idx) = (u +1i*v);
+                handles.uvHScalculated = 1;
             end
         end
         handles.FstartOFcalculated = FstartOF;
         handles.FendOFcalculated = FendOF;
         close(hWaitBar);
     end
-    
-    if runCLG
-        handles.uvCLGcalculated = 1;
-    end
-    if runHS
-        handles.uvHScalculated = 1;
-    end
-    % run TS if applicable
+    % params and allocation for TS and run TS if applicable
     if runTS
+        TSparams_default.CorrWinPixels = 3;
+        TSparams_default.CorrWinFrames = handles.nFrames;
+        TSparams_default.TargetFrames = round(handles.nFrames/2);
+        TSparams_default.MaxLag = round(handles.nFrames/20);
+        try
+            TSparams.CorrWinPixels = Str2NumFromHandle(handles.CorrWinPixelsTS,TSparams_default.CorrWinPixels);
+            TSparams.CorrWinFrames = Str2NumFromHandle(handles.CorrWinFramesTS,TSparams_default.CorrWinFrames);
+            TSparams.MaxLag = Str2NumFromHandle(handles.MaxLagTS,TSparams_default.MaxLag);
+            TSparams.TargetFrames = Str2NumFromHandle(handles.TargetFramesTS,TSparams_default.TargetFrames);
+        catch
+            TSparams = handles.TSparams;
+        end
         tic
         handles.uvTS = TS(TSparams, handles);
         handles.tTS = toc;
@@ -110,11 +122,21 @@ if handles.ImgSeqLoaded
     end
     
     % Save section
-    if get(handles.SaveOF,'value')
-        saveCLG = get(handles.CLGsave,'value');
-        saveHS = get(handles.HSsave,'value');
-        saveTS = get(handles.TSsave,'value');
-        
+    SaveOF = 0;
+    try SaveOF = get(handles.SaveOF,'value'); catch
+        try SaveOF = handles.SaveOF; catch; end
+    end
+    if SaveOF
+        saveCLG = SaveOF; saveHS = SaveOF; saveTS = SaveOF;
+        try
+            saveCLG = get(handles.CLGsave,'value');
+            saveHS = get(handles.HSsave,'value');
+            saveTS = get(handles.TSsave,'value');
+        catch
+            try saveCLG = handles.saveCLG; end
+            try saveHS = handles.saveHS; end
+            try saveTS = handles.saveTS; end
+        end
         % set saving path name
         if saveCLG || saveHS || saveTS
             if isfield(handles,'PathName')

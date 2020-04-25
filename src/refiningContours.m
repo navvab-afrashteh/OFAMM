@@ -6,8 +6,10 @@ function [source, sink, C] = refiningContours(u,v,Mask,Nmin, Lmin_source, Lmax_s
 div1 = ux + vy; % Divergence
 div1 = div1 .* Mask;
 
+tempfig = figure(12313);
 [C,h] = contour(div1);
 set(h,'visible','off')
+close(tempfig);
 
 lCS = size(C, 2);
 

@@ -170,22 +170,19 @@ for idx = 1:nFrames-1
         end
     end
 end
-
 eval(['handles.Source',method,'=save_source;']);
 eval(['handles.Sink',method,'=save_sinks;']);
 eval(['handles.ContourSource',method,'=save_contour_source;']);
 eval(['handles.ContourSink',method,'=save_contour_sink;']);
-
-
 eval(['handles.SourceSpiral',method,'=save_source_spiral;']);
 eval(['handles.SinkSpiral',method,'=save_sinks_spiral;']);
 eval(['handles.ContourSourceSpiral',method,'=save_contour_source_spiral;']);
 eval(['handles.ContourSinkSpiral',method,'=save_contour_sink_spiral;']);
-
 eval(['handles.SS',method,'calculated=1;']); % indicating that source/sink analysis for 'method' has been applieed.
 
 % save source/sink analysis if applicable
-saveSS = get(handles.SaveSS,'value');
+SaveSS = 0;
+try saveSS = get(handles.SaveSS,'value'); catch; try saveSS = handles.SaveSS; end; end
 if saveSS
     % set saving path name
     if isfield(handles,'PathName')
@@ -193,7 +190,6 @@ if saveSS
     else
         handles.SavePathName = pwd; % current folder
     end
-    
     % save the results
     if ~exist(handles.SavePathName,'dir')
         mkdir(handles.SavePathName);
